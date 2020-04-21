@@ -30,6 +30,5 @@ LEAF(_start)
 
 loop:
     j    loop
-    nop
 END(_start)
 

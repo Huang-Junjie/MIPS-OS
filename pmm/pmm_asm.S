@@ -22,5 +22,5 @@ clear_Lo0_b:
 
 NOFOUND:
     mtc0    k1,CP0_ENTRYHI
-    j   ra
+    jr      ra
 END(tlb_out)

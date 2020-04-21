@@ -13,7 +13,7 @@
     mfc0    k1, CP0_STATUS
     and     k1, k0, 0x10   //获取UM
     bnez    k1, save_start  //内核线程陷入时不切换栈
-    li      sp, current
+    lw      sp, current
     add     sp, KSTACK_OFFSET
     add     sp, KSTACKSIZE
 

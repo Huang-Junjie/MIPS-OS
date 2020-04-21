@@ -20,11 +20,5 @@ END(except_vec)
 /* tlb miss 异常处理入口 */
 .section .text.exc_tlb
 LEAF(except_tlb)
-    /* 保存trapframe */
-    SAVE_ALL
-    move    a0, sp
-    jal      trap
-    /* 恢复trapframe */
-    RESTORE_ALL
-    eret
+    j   except_vec
 END(except_tlb)

@@ -25,5 +25,5 @@ set_lo0_b:
 random_write:
     tlbwr
 random_write_b:
-    j       ra
+    jr      ra
 END(tlb_set)
