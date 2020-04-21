@@ -1,6 +1,6 @@
 include ../tools/include.mk
 
-INCLUDE := -I../include/lib/ -I../drivers/gxconsole/
+INCLUDE := -I../lib/ -I../drivers/gxconsole/
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c $^ -o $@
