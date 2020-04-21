@@ -3,7 +3,7 @@
 
 #include <types.h>
 #include <list.h>
-
+#include <trap.h>
 
 //pre define
 struct mm_struct;

@@ -3,7 +3,6 @@
 #include <pmm.h>
 #include <kmalloc.h>
 #include <error.h>
-#include <trap.h>
 #include <swap.h>
 /*
   vmm design include two parts: mm_struct (mm) & vma_struct (vma)
