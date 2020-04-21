@@ -1,12 +1,11 @@
 include ./tools/include.mk
 
-modules := drivers boot init lib trap pmm vmm
+modules := drivers init lib trap pmm vmm
 kernel := kernel
 swapimg := swap.img
 kernel_lds := tools/kernel.lds
 
-objects :=  boot/*.o	\
-			init/*.o	\
+objects :=  init/*.o	\
 			lib/*.o	 \
 			trap/*.o	\
 			pmm/*.o		\
