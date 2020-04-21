@@ -1,4 +1,4 @@
-include ../../toos/include.mk
+include ../../tools/include.mk
 
 INCLUDE := -I../../include/ -I../../lib/
 SWAPIMG := ../../gxemul/swap.img

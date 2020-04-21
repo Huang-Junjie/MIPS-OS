@@ -1,4 +1,4 @@
-include ../../toos/include.mk
+include ../../tools/include.mk
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $^ -o $@
