@@ -1,7 +1,7 @@
 include ../../tools/include.mk
 
 INCLUDE := -I../../include/ -I../../lib/
-SWAPIMG := ../../gxemul/swap.img
+SWAPIMG := ../../swap.img
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c $^ -o $@

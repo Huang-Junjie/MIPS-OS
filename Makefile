@@ -1,8 +1,8 @@
 include ./tools/include.mk
 
 modules := drivers boot init lib trap pmm vmm
-kernel := gxemul/kernel
-swapimg := gxemul/swap.img
+kernel := kernel
+swapimg := swap.img
 kernel_lds := tools/kernel.lds
 
 objects :=  boot/*.o	\
