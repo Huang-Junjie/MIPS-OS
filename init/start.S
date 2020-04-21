@@ -1,14 +1,13 @@
 #include <asm/asm.h>
 #include <asm/regdef.h>
 #include <asm/cp0regdef.h>
-#include <mmu.h>
 
 
 .data
 .align 12
     .globl _boot_pgdir
 _boot_pgdir:
-    .space PGSIZE
+    .space 4096
 
 
 /* 操作系统入口*/
