@@ -53,18 +53,18 @@ extern struct proc_struct *idleproc, *current;
 
 
 
-void proc_init(void);
-int proc_alloc(struct proc_struct **proc_p, uint32_t parent_pid);
-void proc_free(struct proc_struct *);
-void proc_create(u_char *binary, int size);
-void proc_destroy(struct proc_struct *proc);
-void proc_run(struct proc_struct *proc);
+// void proc_init(void);
+// int proc_alloc(struct proc_struct **proc_p, uint32_t parent_pid);
+// void proc_free(struct proc_struct *);
+// void proc_create(u_char *binary, int size);
+// void proc_destroy(struct proc_struct *proc);
+// void proc_run(struct proc_struct *proc);
 
-struct proc_struct * pid2proc(uint32_t pid, struct proc_struct *proc, int checkperm);
+// struct proc_struct * pid2proc(uint32_t pid, struct proc_struct *proc, int checkperm);
 
 
-int kernel_thread(int (*fn)(void *), void *arg);
-void cpu_idle(void) __attribute__((noreturn));
+// int kernel_thread(int (*fn)(void *), void *arg);
+// void cpu_idle(void) __attribute__((noreturn));
 
 
 

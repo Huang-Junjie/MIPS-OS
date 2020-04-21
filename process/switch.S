@@ -3,22 +3,6 @@
 #include <asm/cp0regdef.h>
 #include <trap.h>
 
-LEAF(load_kernel_sp)
-.extern cur_kernel_sp
-    sw  a0, cur_kernel_sp
-    jr  ra
-    nop
-END(load_kernel_sp)
-
-
-LEAF(load_pgdir)
-.extern cur_pgdir
-    sw  a0, cur_pgdir
-    jr  ra
-    nop
-END(load_pgdir)
-
-
 
 LEAF(switch_to)
     # save from's registers
