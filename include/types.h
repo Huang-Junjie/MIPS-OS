@@ -8,7 +8,7 @@
 #define NULL ((void *) 0)
 #endif /* !NULL */
 
-typedef __signed char              int8_t;
+typedef char                       int8_t;
 typedef unsigned char            u_int8_t;
 typedef short                     int16_t;
 typedef unsigned short          u_int16_t;

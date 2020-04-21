@@ -3,13 +3,16 @@
 #include <stdarg.h>
 
 
-void printStr(const char* s) {
-    while (*s) {
-        putChar(*s++);
-    }
+void printStr(const char* s, int width, int padc) {
+    char *s1 = s;
+    int len = 0;
+    while (*s1++) len++;
+    if (width < len) width = len;
+    while (width-- > len) putChar(padc);
+    while (*s) putChar(*s++);
 }
 
-void printNum(unsigned int num, int base, int negFlag) {
+void printNum(unsigned int num, int base, int negFlag, int width, char padc) {
     char buf[32];
     int len = 0;
 
@@ -28,6 +31,8 @@ void printNum(unsigned int num, int base, int negFlag) {
         num = num / base;
     }
 
+    if (width < len) width = len;
+    while (width-- > len) putChar(padc);
     while (len != 0) {
         putChar(buf[--len]);
     }
@@ -35,38 +40,71 @@ void printNum(unsigned int num, int base, int negFlag) {
 
 
 void vprintf(const char* fmt, va_list ap) {
-    int num;
+    long int num;
+    int longFlag;
     int negFlag;
+    char padc;
+    int width;
+
     while (1) {
-        negFlag = 0;
         while (*fmt != '%' && *fmt != '\0') {
             putChar(*fmt++);
         }
         if (*fmt == '\0') break;
+        
+        //跳过%
+        fmt++;
 
-        switch (*(++fmt)) {
+        //检查副格式符
+        if (*fmt == 'l') {
+			longFlag = 1;
+			fmt++;
+		} else {
+			longFlag = 0;
+		}
+
+        if (*fmt == '0') {
+			padc = '0';
+			fmt++;
+		} else {
+            padc = ' ';
+        }
+
+        width = 0;
+		while (*fmt >= '0' && *fmt <= '9') {
+			width = 10 * width + (*fmt - '0');
+			fmt++;
+		}
+        negFlag = 0;
+
+        switch (*fmt) {
         case 'c':
+            if (width < 1) width = 1;
+            while(width-- > 1)  putChar(padc);
             putChar((char)va_arg(ap, int));
             break;
         case 'd':
-            num = va_arg(ap, int);
+            num = longFlag ? va_arg(ap, long int) : va_arg(ap, int);
             if (num < 0) {
                 num = -num;
                 negFlag = 1;
             }
-            printNum(num, 10, negFlag);
+            printNum(num, 10, negFlag, width, padc);
             break;
         case 'o':
-            printNum(va_arg(ap, int), 8, 0);
+            num = longFlag ? va_arg(ap, long int) : va_arg(ap, int);
+            printNum(num, 8, 0, width, padc);
             break;
         case 's':
-            printStr(va_arg(ap, char *));
+            printStr(va_arg(ap, char *), width, padc);
             break;
         case 'u':
-            printNum(va_arg(ap, int), 10, 0);
+            num = longFlag ? va_arg(ap, long int) : va_arg(ap, int);
+            printNum(num, 10, 0, width, padc);
             break;
         case 'x':
-            printNum(va_arg(ap, int), 16, 0);
+            num = longFlag ? va_arg(ap, long int) : va_arg(ap, int);
+            printNum(num, 16, 0, width, padc);
             break;
         case '\0':
             fmt--;
