@@ -1,6 +1,6 @@
 include ./tools/include.mk
 
-modules := drivers init lib trap pmm vmm
+modules := drivers init lib trap pmm vmm process
 kernel := kernel
 swapimg := swap.img
 kernel_lds := tools/kernel.lds
@@ -10,6 +10,7 @@ objects :=  init/*.o	\
 			trap/*.o	\
 			pmm/*.o		\
 			vmm/*.o		\
+			process/*.o		\
 			drivers/gxconsole/*.o \
 			drivers/gxclock/*.o \
 			drivers/gxide/*.o \
