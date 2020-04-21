@@ -15,7 +15,7 @@
     bnez    k1, save_start  //内核线程陷入时不切换栈
     lw      sp, current
     add     sp, KSTACK_OFFSET
-    add     sp, KSTACKSIZE
+    add     sp, KSTACK_SIZE
 
 save_start:
     sub     sp, TF_SIZE
