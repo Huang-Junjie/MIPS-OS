@@ -31,6 +31,7 @@ static void handle_mod(struct trapframe *tf) {
 }
 
 
+extern void tlb_set(uintptr_t badvaddr, pte_t pte);
 static void handle_tlb(struct trapframe *tf) {
     pte_t *ptep = get_pte(current->pgdir, tf->cp0_badvaddr, 0);
     while(1) {
@@ -58,6 +59,7 @@ static void trap_dispatch(struct trapframe *tf) {
             handle_tlb(tf);
             break;
         case 8: //Syscall
+            ;
 
     }
 }

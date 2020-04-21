@@ -42,6 +42,8 @@ void mm_destroy(struct mm_struct *mm);
 
 void vmm_init(void);
 
+int pgfault_handler(struct trapframe *tf);
+
 
 extern volatile unsigned int pgfault_num;
 extern struct mm_struct *check_mm_struct;
