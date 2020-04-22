@@ -66,7 +66,6 @@ static void trap_dispatch(struct trapframe *tf) {
 }
 
 void trap(struct trapframe *tf) {
-    printf("enter trap--------\n");
     if (current == NULL) {
         trap_dispatch(tf);
     }
