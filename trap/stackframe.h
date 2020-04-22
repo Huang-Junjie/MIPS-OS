@@ -11,7 +11,7 @@
 .extern cur_kernel_sp
     move    k0, sp
     mfc0    k1, CP0_STATUS
-    and     k1, k0, 0x10   //获取UM
+    and     k1, 0x10   //获取UM
     beqz    k1, save_start  //内核线程陷入时不切换栈
     lw      sp, cur_kernel_sp
 
