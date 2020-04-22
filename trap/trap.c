@@ -48,7 +48,7 @@ static void handle_tlb(struct trapframe *tf) {
 
 
 static void trap_dispatch(struct trapframe *tf) {
-    switch ((tf->cp0_cause | 0x7c) >> 2) {
+    switch ((tf->cp0_cause & 0x7c) >> 2) {
         case 0:  //Int
             handle_int(tf);
             break;
