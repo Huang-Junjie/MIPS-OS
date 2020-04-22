@@ -11,6 +11,7 @@ LEAF(tlb_out)
     mfc0    k0, CP0_INDEX
     bltz    k0, NOFOUND
 
+    tlbr
     andi    k0, a0, 0x00001000
     beqz    k0, clear_Lo0
     mtc0    zero, CP0_ENTRYLO1
