@@ -32,8 +32,9 @@ static void handle_mod(struct trapframe *tf) {
 
 
 extern void tlb_set(uintptr_t badvaddr, pte_t pte);
+extern pde_t *cur_pgdir; 
 static void handle_tlb(struct trapframe *tf) {
-    pte_t *ptep = get_pte(current->pgdir, tf->cp0_badvaddr, 0);
+    pte_t *ptep = get_pte(cur_pgdir, tf->cp0_badvaddr, 0);
     while(1) {
         if (ptep != NULL && *ptep & PTE_V) {
             tlb_set(tf->cp0_badvaddr, (*ptep) >> 6);

@@ -8,14 +8,12 @@
 
 .macro SAVE_ALL
 .set noat
-.extern current
+.extern cur_kernel_sp
     move    k0, sp
     mfc0    k1, CP0_STATUS
     and     k1, k0, 0x10   //获取UM
     beqz    k1, save_start  //内核线程陷入时不切换栈
-    lw      sp, current
-    add     sp, KSTACK_OFFSET
-    add     sp, KSTACK_SIZE
+    lw      sp, cur_kernel_sp
 
 save_start:
     sub     sp, TF_SIZE

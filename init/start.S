@@ -9,6 +9,14 @@
 _boot_pgdir:
     .space 4096
 
+    .globl cur_pgdir
+cur_pgdir:
+    .word _boot_pgdir
+
+    .globl cur_kernel_sp
+cur_kernel_sp:
+    .word 0
+
 
 /* 操作系统入口*/
 .text

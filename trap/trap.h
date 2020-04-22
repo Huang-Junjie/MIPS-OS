@@ -62,9 +62,4 @@ struct trapframe {
 #define TF_SIZE     ((TF_BADVADDR)+4)
 
 
-/* 进程控制块中的kstack偏移 */
-#define KSTACK_OFFSET    20
-#define KSTACK_SIZE  8192
-
-
 #endif /* _TRAP_H_ */
