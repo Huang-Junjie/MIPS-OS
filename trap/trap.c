@@ -65,7 +65,17 @@ static void trap_dispatch(struct trapframe *tf) {
     }
 }
 
+void print_tf(struct trapframe *tf)  {
+    printf("Enter print_tf\n");
+    printf("CP0_STATUS value:\t0x%08x\n", tf->cp0_status);
+    printf("CP0_CAUSE value:\t0x%08x\n", tf->cp0_cause);
+    printf("CP0_EPC value:\t0x%08x\n", tf->cp0_epc);
+    printf("CP0_BADVADDR value:\t0x%08\n", tf->cp0_badvaddr);
+}
+
+
 void trap(struct trapframe *tf) {
+    print_tf(tf);
     if (current == NULL) {
         trap_dispatch(tf);
     }
