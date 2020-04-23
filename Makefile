@@ -25,7 +25,9 @@ $(modules):
 	$(MAKE) --directory=$@
 
 $(kernel): $(modules)
-	$(LD) $(objects) -T $(kernel_lds) -o $(kernel)
+	# $(LD) -nostdlib -T $(user_lds) -o hello.out user/hello.o
+	# $(LD) -nostdlib -T $(kernel_lds) -o $(kernel) $(objects) -b binary hello.out
+	$(LD) -nostdlib -T $(kernel_lds) -o $(kernel) $(objects)
 
 
 clean:

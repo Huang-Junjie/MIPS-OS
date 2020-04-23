@@ -1,4 +1,4 @@
-OUTPUT_ARCH(mips)
+OUTPUT_FORMAT("elf32-tradbigmips")
 ENTRY(_start)
 
 SECTIONS
