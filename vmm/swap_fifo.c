@@ -137,7 +137,7 @@ _fifo_tick_event(struct mm_struct *mm)
 { return 0; }
 
 
-struct swap_manager swap_manager_fifo =
+struct swap_manager fifo_swap_manager =
 {
      .name            = "fifo swap manager",
      .init            = &_fifo_init,

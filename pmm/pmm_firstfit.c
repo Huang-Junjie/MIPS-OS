@@ -14,8 +14,8 @@
  * "Data Structure -- C programming language".
 */
 // LAB2 EXERCISE 1: YOUR CODE
-// you should rewrite functions: `default_init`, `default_init_memmap`,
-// `default_alloc_pages`, `default_free_pages`.
+// you should rewrite functions: `firstfit_init`, `firstfit_init_memmap`,
+// `firstfit_alloc_pages`, `firstfit_free_pages`.
 /*
  * Details of FFMA
  * (1) Preparation:
@@ -30,11 +30,11 @@
  * special struct (such as struct `page`), using the following MACROs: `le2page`
  * (in memlayout.h), (and in future labs: `le2vma` (in vmm.h), `le2proc` (in
  * proc.h), etc).
- * (2) `default_init`:
- *  You can reuse the demo `default_init` function to initialize the `free_list`
+ * (2) `firstfit_init`:
+ *  You can reuse the demo `firstfit_init` function to initialize the `free_list`
  * and set `nr_free` to 0. `free_list` is used to record the free memory blocks.
  * `nr_free` is the total number of the free memory blocks.
- * (3) `default_init_memmap`:
+ * (3) `firstfit_init_memmap`:
  *  CALL GRAPH: `kern_init` --> `pmm_init` --> `page_init` --> `init_memmap` -->
  * `pmm_manager` --> `init_memmap`.
  *  This function is used to initialize a free block (with parameter `addr_base`,
@@ -52,7 +52,7 @@
  *  After that, We can use `p->page_link` to link this page into `free_list`.
  * (e.g.: `list_add_before(&free_list, &(p->page_link));` )
  *  Finally, we should update the sum of the free memory blocks: `nr_free += n`.
- * (4) `default_alloc_pages`:
+ * (4) `firstfit_alloc_pages`:
  *  Search for the first free block (block size >= n) in the free list and reszie
  * the block found, returning the address of this block as the address required by
  * `malloc`.
@@ -81,7 +81,7 @@
  *              return `p`.
  *      (4.2)
  *          If we can not find a free block with its size >=n, then return NULL.
- * (5) `default_free_pages`:
+ * (5) `firstfit_free_pages`:
  *  re-link the pages into the free list, and may merge small free blocks into
  * the big ones.
  *  (5.1)
@@ -100,13 +100,13 @@ free_area_t free_area;
 #define nr_free (free_area.nr_free)
 
 static void
-default_init(void) {
+firstfit_init(void) {
     list_init(&free_list);
     nr_free = 0;
 }
 
 static void
-default_init_memmap(struct Page *base, size_t n) {
+firstfit_init_memmap(struct Page *base, size_t n) {
     assert(n > 0);
     struct Page *p = base;
     for (; p != base + n; p ++) {
@@ -121,7 +121,7 @@ default_init_memmap(struct Page *base, size_t n) {
 }
 
 static struct Page *
-default_alloc_pages(size_t n) {
+firstfit_alloc_pages(size_t n) {
     assert(n > 0);
     if (n > nr_free) {
         return NULL;
@@ -151,7 +151,7 @@ default_alloc_pages(size_t n) {
 }
 
 static void
-default_free_pages(struct Page *base, size_t n) {
+firstfit_free_pages(struct Page *base, size_t n) {
     assert(n > 0);
     struct Page *p = base;
     for (; p != base + n; p ++) {
@@ -192,7 +192,7 @@ default_free_pages(struct Page *base, size_t n) {
 }
 
 static size_t
-default_nr_free_pages(void) {
+firstfit_nr_free_pages(void) {
     return nr_free;
 }
 
@@ -248,9 +248,9 @@ basic_check(void) {
 }
 
 // LAB2: below code is used to check the first fit allocation algorithm (your EXERCISE 1)
-// NOTICE: You SHOULD NOT CHANGE basic_check, default_check functions!
+// NOTICE: You SHOULD NOT CHANGE basic_check, firstfit_check functions!
 static void
-default_check(void) {
+firstfit_check(void) {
     int count = 0, total = 0;
     list_entry_t *le = &free_list;
     while ((le = list_next(le)) != &free_list) {
@@ -312,12 +312,12 @@ default_check(void) {
     assert(total == 0);
 }
 
-const struct pmm_manager default_pmm_manager = {
-    .name = "default_pmm_manager",
-    .init = default_init,
-    .init_memmap = default_init_memmap,
-    .alloc_pages = default_alloc_pages,
-    .free_pages = default_free_pages,
-    .nr_free_pages = default_nr_free_pages,
-    .check = default_check,
+const struct pmm_manager firstfit_pmm_manager = {
+    .name = "first fit pmm manager",
+    .init = firstfit_init,
+    .init_memmap = firstfit_init_memmap,
+    .alloc_pages = firstfit_alloc_pages,
+    .free_pages = firstfit_free_pages,
+    .nr_free_pages = firstfit_nr_free_pages,
+    .check = firstfit_check,
 };

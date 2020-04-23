@@ -3,7 +3,7 @@
 
 #include <pmm.h>
 
-extern const struct pmm_manager default_pmm_manager;
+extern const struct pmm_manager firstfit_pmm_manager;
 extern free_area_t free_area;
 #endif /* ! __KERN_MM_DEFAULT_PMM_H__ */
 

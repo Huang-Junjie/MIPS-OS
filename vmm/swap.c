@@ -44,12 +44,12 @@ swapfs_write(swap_entry_t entry, struct Page *page) {
 
 int
 swap_init(void) {
-    sm = &swap_manager_fifo;
+    sm = &fifo_swap_manager;
     int r = sm->init();
 
     if (r == 0) {
         swap_init_ok = 1;
-        printf("SWAP: manager = %s\n", sm->name);
+        printf("swap manager: %s\n", sm->name);
         check_swap();
     }
 

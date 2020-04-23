@@ -21,7 +21,7 @@ static void check_boot_pgdir(void);
 //init_pmm_manager - initialize a pmm_manager instance
 static void
 init_pmm_manager(void) {
-    pmm_manager = &default_pmm_manager;
+    pmm_manager = &firstfit_pmm_manager;
     printf("memory management: %s\n", pmm_manager->name);
     pmm_manager->init();
 }
@@ -63,7 +63,6 @@ nr_free_pages(void) {
 /* pmm_init - initialize the physical memory management */
 static void
 page_init(void) {
-    printf("Enter page_init\n");
     extern char end[];
     uintptr_t maxpa;
     int i;
@@ -120,7 +119,6 @@ boot_alloc_page(void) {
 //         - check the correctness of pmm & paging mechanism, print PDT&PT
 void
 pmm_init(void) {
-    printf("Enter pmm_init\n");
     //We need to alloc/free the physical memory (granularity is 4KB or other size).
     //So a framework of physical memory manager (struct pmm_manager)is defined in pmm.h
     //First we should init a physical memory manager(pmm) based on the framework.
