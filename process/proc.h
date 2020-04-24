@@ -50,6 +50,8 @@ struct proc_struct {
 #define le2proc(le, member)         \
     to_struct((le), struct proc_struct, member)
 
+#define CLONE_VM 0x1
+
 #define WT_CHILD 0x1   //等待子进程
 #define WT_SEM   0x2    //等待信号量
 #define WT_TIMER 0x3   //等待计时器
@@ -62,6 +64,7 @@ extern struct proc_struct *idleproc, *current;
 void proc_init(void);
 struct proc_struct *find_proc(uint32_t pid);
 int kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags);
+int do_fork(uint32_t clone_flags, struct trapframe *tf)
 
 // int proc_alloc(struct proc_struct **proc_p, uint32_t parent_pid);
 // void proc_free(struct proc_struct *);

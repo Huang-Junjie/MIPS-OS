@@ -13,6 +13,10 @@ static list_entry_t proc_free_list;  // 未分配的进程控制块链表
 list_entry_t proc_list;              // 已分配的进程控制块链表
 static int nr_process = 0;
 
+void kernel_thread_entry(void);
+void forkret(struct trapframe *tf);
+void switch_to(struct context *from, struct context *to);
+
 // void
 // proc_run(struct proc_struct *proc) {
 //     if (proc != current) {
@@ -28,8 +32,6 @@ static int nr_process = 0;
 //         // local_intr_restore(intr_flag);
 //     }
 // }
-
-
 
 static uint32_t make_pid(struct proc_struct *proc) {
   static uint32_t next_pid = 0;
@@ -73,20 +75,78 @@ static struct proc_struct *proc_alloc() {
   return proc;
 }
 
-
-
-int
-kernel_thread(int (*fn)(void *), void *arg) {
-    struct trapframe tf;
-    memset(&tf, 0, sizeof(struct trapframe));
-    tf.tf_cs = KERNEL_CS;
-    tf.tf_ds = tf.tf_es = tf.tf_ss = KERNEL_DS;
-    tf.tf_regs.reg_ebx = (uint32_t)fn;
-    tf.tf_regs.reg_edx = (uint32_t)arg;
-    tf.cp0_epc = (uint32_t)kernel_thread_entry;
-    return do_fork(clone_flags | CLONE_VM, 0, &tf);
+static int copy_mm(uint32_t clone_flags, struct proc_struct *proc) {
+  struct mm_struct *mm, *oldmm = current->mm;
+  //当前是内核线程
+  if (oldmm == NULL) {
+    return 0;
+  }
+  //共享mm
+  if (clone_flags & CLONE_VM) {
+    mm = oldmm;
+  } else {
+    mm = mm_create();
+    //建立页目录
+    struct Page *page = alloc_page();
+    pde_t *pgdir = page2kva(page);
+    pgdir[PDX(VPT)] = PADDR(pgdir) | PTE_V;
+    mm->pgdir = pgdir;
+    //复制mm
+    dup_mmap(mm, oldmm);
+  }
+  mm_count_inc(mm);
+  proc->mm = mm;
+  proc->pgdir = mm->pgdir;
+  return 0;
 }
 
+int do_fork(uint32_t clone_flags, struct trapframe *tf) {
+  if (nr_process >= MAX_PROCESS) {
+    return -E_NO_FREE_PROC;
+  }
+  //分配进程控制块
+  struct proc_struct *proc = alloc_proc();
+
+  //建立内核栈
+  struct Page *page = alloc_pages(KSTACKPAGE);
+  proc->kstack = (uintptr_t)page2kva(page);
+
+  //复制mm
+  copy_mm(clone_flags, proc);
+
+  //设置tf和context
+  proc->tf = (struct trapframe *)(proc->kstack + KSTACKSIZE) - 1;
+  *(proc->tf) = *tf;
+  proc->tf->regs[2] = 0;  // v0=0
+  if (proc->tf->regs[29] == 0) {
+    proc->tf->regs[29] = proc->kstack + KSTACKSIZE;
+  }
+  proc->context.pc = (uintptr_t)forkret;
+  proc->context.regs[29] = (uintptr_t)(proc->tf);
+
+  //加入分配的进程控制块链表; 设置父子兄弟进程关系
+  list_add(&proc_list, &(proc->list_link));
+  proc->parent = current;
+  if ((proc->optr = proc->parent->cptr) != NULL) {
+    proc->optr->yptr = proc;
+  }
+  proc->parent->cptr = proc;
+  nr_process++;
+
+  //将新进程加入就绪队列
+  wakeup_proc(proc);
+  //返回新进程pid
+  return proc->pid;
+}
+
+int kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags) {
+  struct trapframe tf;
+  memset(&tf, 0, sizeof(struct trapframe));
+  tf.regs[4] = (uint32_t)fn;
+  tf.regs[5] = (uint32_t)arg;
+  tf.cp0_epc = (uint32_t)kernel_thread_entry;
+  return do_fork(clone_flags | CLONE_VM, &tf);
+}
 
 void proc_init(void) {
   //初始化进程控制块和进程控制块链表

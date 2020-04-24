@@ -138,7 +138,7 @@ pmm_init(void) {
 
     // recursively insert boot_pgdir in itself
     // to form a virtual page table at virtual address VPT
-    boot_pgdir[PDX(VPT)] = PADDR(boot_pgdir) |  PTE_G | PTE_V | PTE_D;
+    boot_pgdir[PDX(VPT)] = PADDR(boot_pgdir) | PTE_V ;
 
     //now the basic virtual memory map(see memalyout.h) is established.
     //check the correctness of the basic virtual memory map.
@@ -324,6 +324,92 @@ pgdir_alloc_page(pde_t *pgdir, uintptr_t la, uint32_t perm) {
     }
 
     return page;
+}
+
+void
+unmap_range(pde_t *pgdir, uintptr_t start, uintptr_t end) {
+    assert(start % PGSIZE == 0 && end % PGSIZE == 0);
+    assert(USER_ACCESS(start, end));
+
+    do {
+        pte_t *ptep = get_pte(pgdir, start, 0);
+        if (ptep == NULL) {
+            start = ROUNDDOWN(start + PTSIZE, PTSIZE);
+            continue ;
+        }
+        if (*ptep != 0) {
+            page_remove_pte(pgdir, start, ptep);
+        }
+        start += PGSIZE;
+    } while (start != 0 && start < end);
+}
+
+void
+exit_range(pde_t *pgdir, uintptr_t start, uintptr_t end) {
+    assert(start % PGSIZE == 0 && end % PGSIZE == 0);
+    assert(USER_ACCESS(start, end));
+
+    start = ROUNDDOWN(start, PTSIZE);
+    do {
+        int pde_idx = PDX(start);
+        if (pgdir[pde_idx] & PTE_P) {
+            free_page(pde2page(pgdir[pde_idx]));
+            pgdir[pde_idx] = 0;
+        }
+        start += PTSIZE;
+    } while (start != 0 && start < end);
+}
+
+int
+copy_range(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end, bool share) {
+    assert(start % PGSIZE == 0 && end % PGSIZE == 0);
+    assert(USER_ACCESS(start, end));
+    // copy content by page unit.
+    do {
+        //call get_pte to find process A's pte according to the addr start
+        pte_t *ptep = get_pte(from, start, 0), *nptep;
+        if (ptep == NULL) {
+            start = ROUNDDOWN(start + PTSIZE, PTSIZE);
+            continue ;
+        }
+        //call get_pte to find process B's pte according to the addr start. If pte is NULL, just alloc a PT
+        if (*ptep & PTE_P) {
+            if ((nptep = get_pte(to, start, 1)) == NULL) {
+                return -E_NO_MEM;
+            }
+        uint32_t perm = (*ptep & PTE_USER);
+        //get page from ptep
+        struct Page *page = pte2page(*ptep);
+        // alloc a page for process B
+        struct Page *npage=alloc_page();
+        assert(page!=NULL);
+        assert(npage!=NULL);
+        int ret=0;
+        /* LAB5:EXERCISE2 YOUR CODE
+         * replicate content of page to npage, build the map of phy addr of nage with the linear addr start
+         *
+         * Some Useful MACROs and DEFINEs, you can use them in below implementation.
+         * MACROs or Functions:
+         *    page2kva(struct Page *page): return the kernel vritual addr of memory which page managed (SEE pmm.h)
+         *    page_insert: build the map of phy addr of an Page with the linear addr la
+         *    memcpy: typical memory copy function
+         *
+         * (1) find src_kvaddr: the kernel virtual address of page
+         * (2) find dst_kvaddr: the kernel virtual address of npage
+         * (3) memory copy from src_kvaddr to dst_kvaddr, size is PGSIZE
+         * (4) build the map of phy addr of  nage with the linear addr start
+         */
+        void * kva_src = page2kva(page);
+        void * kva_dst = page2kva(npage);
+    
+        memcpy(kva_dst, kva_src, PGSIZE);
+
+        ret = page_insert(to, npage, start, perm);
+        assert(ret == 0);
+        }
+        start += PGSIZE;
+    } while (start != 0 && start < end);
+    return 0;
 }
 
 static void
