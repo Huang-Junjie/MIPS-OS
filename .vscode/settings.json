@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "types.h": "c",
+        "proc.h": "c",
+        "error.h": "c"
+    }
+}

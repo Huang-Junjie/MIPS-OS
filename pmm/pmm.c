@@ -22,7 +22,7 @@ static void check_boot_pgdir(void);
 static void
 init_pmm_manager(void) {
     pmm_manager = &firstfit_pmm_manager;
-    printf("memory management: %s\n", pmm_manager->name);
+    printf("memory manager: %s\n", pmm_manager->name);
     pmm_manager->init();
 }
 
@@ -328,7 +328,6 @@ pgdir_alloc_page(pde_t *pgdir, uintptr_t la, uint32_t perm) {
 
 static void
 check_alloc_page(void) {
-    printf("Enter check_alloc_page\n");
     pmm_manager->check();
     printf("check_alloc_page() succeeded!\n");
 }
