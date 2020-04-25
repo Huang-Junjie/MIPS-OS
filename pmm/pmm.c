@@ -329,12 +329,11 @@ pgdir_alloc_page(pde_t *pgdir, uintptr_t la, uint32_t perm) {
 void
 unmap_range(pde_t *pgdir, uintptr_t start, uintptr_t end) {
     assert(start % PGSIZE == 0 && end % PGSIZE == 0);
-    assert(USER_ACCESS(start, end));
 
     do {
         pte_t *ptep = get_pte(pgdir, start, 0);
         if (ptep == NULL) {
-            start = ROUNDDOWN(start + PTSIZE, PTSIZE);
+            start = ROUNDDOWN(start + PDSIZE, PDSIZE);
             continue ;
         }
         if (*ptep != 0) {
@@ -349,14 +348,14 @@ exit_range(pde_t *pgdir, uintptr_t start, uintptr_t end) {
     assert(start % PGSIZE == 0 && end % PGSIZE == 0);
     assert(USER_ACCESS(start, end));
 
-    start = ROUNDDOWN(start, PTSIZE);
+    start = ROUNDDOWN(start, PDSIZE);
     do {
         int pde_idx = PDX(start);
-        if (pgdir[pde_idx] & PTE_P) {
+        if (pgdir[pde_idx] & PTE_V) {
             free_page(pde2page(pgdir[pde_idx]));
             pgdir[pde_idx] = 0;
         }
-        start += PTSIZE;
+        start += PDSIZE;
     } while (start != 0 && start < end);
 }
 
@@ -369,15 +368,15 @@ copy_range(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end, bool share) {
         //call get_pte to find process A's pte according to the addr start
         pte_t *ptep = get_pte(from, start, 0), *nptep;
         if (ptep == NULL) {
-            start = ROUNDDOWN(start + PTSIZE, PTSIZE);
+            start = ROUNDDOWN(start + PDSIZE, PDSIZE);
             continue ;
         }
         //call get_pte to find process B's pte according to the addr start. If pte is NULL, just alloc a PT
-        if (*ptep & PTE_P) {
+        if (*ptep & PTE_V) {
             if ((nptep = get_pte(to, start, 1)) == NULL) {
                 return -E_NO_MEM;
             }
-        uint32_t perm = (*ptep & PTE_USER);
+        uint32_t perm = (*ptep & (PTE_V | PTE_D));
         //get page from ptep
         struct Page *page = pte2page(*ptep);
         // alloc a page for process B
@@ -385,20 +384,7 @@ copy_range(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end, bool share) {
         assert(page!=NULL);
         assert(npage!=NULL);
         int ret=0;
-        /* LAB5:EXERCISE2 YOUR CODE
-         * replicate content of page to npage, build the map of phy addr of nage with the linear addr start
-         *
-         * Some Useful MACROs and DEFINEs, you can use them in below implementation.
-         * MACROs or Functions:
-         *    page2kva(struct Page *page): return the kernel vritual addr of memory which page managed (SEE pmm.h)
-         *    page_insert: build the map of phy addr of an Page with the linear addr la
-         *    memcpy: typical memory copy function
-         *
-         * (1) find src_kvaddr: the kernel virtual address of page
-         * (2) find dst_kvaddr: the kernel virtual address of npage
-         * (3) memory copy from src_kvaddr to dst_kvaddr, size is PGSIZE
-         * (4) build the map of phy addr of  nage with the linear addr start
-         */
+ 
         void * kva_src = page2kva(page);
         void * kva_dst = page2kva(npage);
     
