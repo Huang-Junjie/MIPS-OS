@@ -5,6 +5,7 @@
         "error.h": "c",
         "printf.h": "c",
         "trap.h": "c",
-        "vmm.h": "c"
+        "vmm.h": "c",
+        "sched_rr.h": "c"
     }
 }
