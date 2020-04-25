@@ -1,4 +1,4 @@
-#include <default_sched.h>
+#include <sched_rr.h>
 #include <list.h>
 #include <printf.h>
 #include <proc.h>
