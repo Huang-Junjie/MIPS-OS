@@ -17,6 +17,7 @@ static int nr_process = 0;
 void kernel_thread_entry(void);
 void forkret(struct trapframe *tf);
 void switch_to(struct context *from, struct context *to);
+void set_asid(uint32_t asid);
 
 static uint32_t make_pid(struct proc_struct *proc) {
   static uint32_t next_pid = 0;
@@ -65,6 +66,7 @@ void proc_run(struct proc_struct *proc) {
     struct proc_struct *prev = current, *next = proc;
     current = proc;
     // load_kernel_sp(next->kstack + KSTACKSIZE);
+    set_asid(GET_PROC_ASID(current->pid));
     switch_to(&(prev->context), &(next->context));
   }
 }
@@ -139,6 +141,7 @@ int kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags) {
   tf.regs[8] = (uint32_t)fn;
   tf.regs[9] = (uint32_t)arg;
   tf.cp0_epc = (uint32_t)kernel_thread_entry;
+  tf.cp0_status = 0x1001;
   return do_fork(clone_flags | CLONE_VM, &tf);
 }
 
@@ -167,6 +170,7 @@ static int init_main(void *arg) {
   //   assert(kernel_allocated_store == kallocated());
   //   cprintf("init check memory pass.\n");
   printf("init_main\n");
+  while(1) {}
   return 0;
 }
 

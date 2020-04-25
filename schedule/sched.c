@@ -1,8 +1,9 @@
-#include <sched_rr.h>
 #include <list.h>
 #include <printf.h>
 #include <proc.h>
 #include <sched.h>
+#include <sched_rr.h>
+#include <sync.h>
 
 static list_entry_t timer_list;
 
@@ -43,12 +44,12 @@ void sched_init(void) {
   rq->max_time_slice = 5;
   sched_class->init(rq);
 
-  printf("sched class: %s\n", sched_class->name);
+  cprintf("sched class: %s\n", sched_class->name);
 }
 
 void wakeup_proc(struct proc_struct *proc) {
   assert(proc->state != PROC_ZOMBIE);
-  bool intr_flag;
+  cli();
 
   if (proc->state != PROC_RUNNABLE) {
     proc->state = PROC_RUNNABLE;
@@ -59,11 +60,13 @@ void wakeup_proc(struct proc_struct *proc) {
   } else {
     printf("wakeup runnable process.\n");
   }
+
+  sti();
 }
 
 void schedule(void) {
-  bool intr_flag;
   struct proc_struct *next;
+  cli();
 
   current->need_resched = 0;
   if (current->state == PROC_RUNNABLE) {
@@ -79,6 +82,8 @@ void schedule(void) {
   if (next != current) {
     proc_run(next);
   }
+
+  sti();
 }
 
 // void
@@ -139,7 +144,7 @@ void schedule(void) {
 //                     assert(proc->wait_state & WT_INTERRUPTED);
 //                 }
 //                 else {
-//                     warn("process %d's wait_state == 0.\n", proc->pid);
+//                     printf("process %d's wait_state == 0.\n", proc->pid);
 //                 }
 //                 wakeup_proc(proc);
 //                 del_timer(timer);

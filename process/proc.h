@@ -45,7 +45,7 @@ struct proc_struct {
 
 
 #define MAX_PROCESS                 256
-#define PROCX(pid) ((pid) & 0x0ff)
+#define PROCX(pid) ((pid) & 0xff)
 #define GET_PROC_ASID(pid) PROCX(pid)
 #define le2proc(le, member)         \
     to_struct((le), struct proc_struct, member)

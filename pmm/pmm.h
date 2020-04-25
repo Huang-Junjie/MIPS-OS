@@ -1,5 +1,5 @@
-#ifndef _PMM_H
-#define _PMM_H
+#ifndef _PMM_H_
+#define _PMM_H_
 
 #include <list.h>
 #include <types.h>
@@ -159,4 +159,4 @@ ppage(struct Page *page) {
 }
 
 
-#endif /* _PMM_H */
+#endif /* _PMM_H_ */

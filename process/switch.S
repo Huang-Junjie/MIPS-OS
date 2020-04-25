@@ -38,16 +38,16 @@ LEAF(switch_to)
     sw  $30,TF_REG30(a0)
     sw  $31,TF_REG31(a0)
 
-    mfhi    k0
-    sw      k0, (TF_REG31+4)(a0)
-    mflo    k0
-    sw      k0, (TF_REG31+8)(a0)
+    mfhi    t0
+    sw      t0, (TF_REG31+4)(a0)
+    mflo    t0
+    sw      t0, (TF_REG31+8)(a0)
 
     # restore to's registers
-    lw      k0, (TF_REG31+4)(a1)
-    mthi    k0
-    lw      k0, (TF_REG31+8)(a1)
-    mtlo    k0
+    lw      t0, (TF_REG31+4)(a1)
+    mthi    t0
+    lw      t0, (TF_REG31+8)(a1)
+    mtlo    t0
 
     lw  $1,TF_REG1(a1)
     lw  $2,TF_REG2(a1)
@@ -82,3 +82,12 @@ LEAF(switch_to)
     lw  $5,TF_REG5(a1)
     jr  ra
 END(switch_to)
+
+
+LEAF(set_asid)
+    mfc0    t0, CP0_ENTRYHI
+    and     t0, ~0xff
+    or      t0, a0
+    mtc0    t0, CP0_ENTRYHI
+    jr      ra
+END(set_asid)

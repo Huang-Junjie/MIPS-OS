@@ -11,7 +11,7 @@ INCLUDE := -I../include/ -I../lib/ -I../trap/ -I../process/ -I../pmm/ -I../vmm/ 
 
 .PHONY: all clean
 
-all: sched.o sched_rr.o
+all: sync_asm.o
 
 clean:
 	rm -rf *.o
