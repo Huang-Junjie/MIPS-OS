@@ -44,7 +44,7 @@ void sched_init(void) {
   rq->max_time_slice = 5;
   sched_class->init(rq);
 
-  cprintf("sched class: %s\n", sched_class->name);
+  printf("sched class: %s\n", sched_class->name);
 }
 
 void wakeup_proc(struct proc_struct *proc) {
