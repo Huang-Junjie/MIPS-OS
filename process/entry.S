@@ -1,7 +1,6 @@
-NESTED(kernel_thread_entry, 40, ra)
-    pushl %edx              # push arg
-    call *%ebx              # call fn
-
-    pushl %eax              # save the return value of fn(arg)
-    call do_exit            # call do_exit to terminate current thread
+NESTED(kernel_thread_entry, 0, ra)
+    move    a0, t0  #arg  
+    jal     t1      #fn
+    move    a0, v0  
+    jal     do_exit
 END(kernel_thread_entry)

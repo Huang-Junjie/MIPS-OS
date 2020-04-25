@@ -17,22 +17,6 @@ void kernel_thread_entry(void);
 void forkret(struct trapframe *tf);
 void switch_to(struct context *from, struct context *to);
 
-// void
-// proc_run(struct proc_struct *proc) {
-//     if (proc != current) {
-//         // bool intr_flag;
-//         struct proc_struct *prev = current, *next = proc;
-//         // local_intr_save(intr_flag);
-//         // {
-//         current = proc;
-//         load_kernel_sp(next->kstack + KSTACKSIZE);
-//         load_pgdir(next->pgdir);
-//         switch_to(&(prev->context), &(next->context));
-//         // }
-//         // local_intr_restore(intr_flag);
-//     }
-// }
-
 static uint32_t make_pid(struct proc_struct *proc) {
   static uint32_t next_pid = 0;
   uint32_t idx = proc - procs;
@@ -73,6 +57,15 @@ static struct proc_struct *proc_alloc() {
   proc->cptr = proc->yptr = proc->optr = NULL;
 
   return proc;
+}
+
+void proc_run(struct proc_struct *proc) {
+  if (proc != current) {
+    struct proc_struct *prev = current, *next = proc;
+    current = proc;
+    // load_kernel_sp(next->kstack + KSTACKSIZE);
+    switch_to(&(prev->context), &(next->context));
+  }
 }
 
 static int copy_mm(uint32_t clone_flags, struct proc_struct *proc) {
@@ -121,8 +114,8 @@ int do_fork(uint32_t clone_flags, struct trapframe *tf) {
   if (proc->tf->regs[29] == 0) {
     proc->tf->regs[29] = proc->kstack + KSTACKSIZE;
   }
-  proc->context.pc = (uintptr_t)forkret;
-  proc->context.regs[29] = (uintptr_t)(proc->tf);
+  proc->context.regs[31] = (uintptr_t)forkret;
+  proc->context.regs[29] = (uintptr_t)(proc->tf); 
 
   //加入分配的进程控制块链表; 设置父子兄弟进程关系
   list_add(&proc_list, &(proc->list_link));
@@ -142,10 +135,38 @@ int do_fork(uint32_t clone_flags, struct trapframe *tf) {
 int kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags) {
   struct trapframe tf;
   memset(&tf, 0, sizeof(struct trapframe));
-  tf.regs[4] = (uint32_t)fn;
-  tf.regs[5] = (uint32_t)arg;
+  tf.regs[8] = (uint32_t)fn;
+  tf.regs[9] = (uint32_t)arg;
   tf.cp0_epc = (uint32_t)kernel_thread_entry;
   return do_fork(clone_flags | CLONE_VM, &tf);
+}
+
+static int init_main(void *arg) {
+  //   size_t nr_free_pages_store = nr_free_pages();
+  //   size_t kernel_allocated_store = kallocated();
+
+  //   int pid = kernel_thread(user_main, NULL, 0);
+  //   if (pid <= 0) {
+  //     panic("create user_main failed.\n");
+  //   }
+  //   extern void check_sync(void);
+  //   check_sync();  // check philosopher sync problem
+
+  //   while (do_wait(0, NULL) == 0) {
+  //     schedule();
+  //   }
+
+  //   cprintf("all user-mode processes have quit.\n");
+  //   assert(initproc->cptr == NULL && initproc->yptr == NULL &&
+  //          initproc->optr == NULL);
+  //   assert(nr_process == 2);
+  //   assert(list_next(&proc_list) == &(initproc->list_link));
+  //   assert(list_prev(&proc_list) == &(initproc->list_link));
+  //   assert(nr_free_pages_store == nr_free_pages());
+  //   assert(kernel_allocated_store == kallocated());
+  //   cprintf("init check memory pass.\n");
+  printf("init_main\n");
+  return 0;
 }
 
 void proc_init(void) {
