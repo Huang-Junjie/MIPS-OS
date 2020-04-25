@@ -1,5 +1,6 @@
 #include <error.h>
 #include <pmm.h>
+#include <vmm.h>
 #include <printf.h>
 #include <proc.h>
 #include <string.h>

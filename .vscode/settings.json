@@ -4,6 +4,7 @@
         "proc.h": "c",
         "error.h": "c",
         "printf.h": "c",
-        "trap.h": "c"
+        "trap.h": "c",
+        "vmm.h": "c"
     }
 }
