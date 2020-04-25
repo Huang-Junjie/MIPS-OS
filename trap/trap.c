@@ -29,7 +29,7 @@ static void handle_mod(struct trapframe *tf) {
 }
 
 extern void tlb_set(uintptr_t badvaddr, pte_t pte);
-extern struct proc_struct *current = NULL;
+extern struct proc_struct *current;
 static void handle_tlb(struct trapframe *tf) {
   pte_t *ptep;
   pde_t *cur_pgdir;
