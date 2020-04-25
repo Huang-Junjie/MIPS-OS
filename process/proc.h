@@ -4,7 +4,7 @@
 #include <types.h>
 #include <list.h>
 #include <trap.h>
-// #include <mmu.h>
+#include <mmu.h>
 
 // process's state in his life cycle
 enum proc_state {
