@@ -65,7 +65,7 @@ void proc_init(void);
 void proc_run(struct proc_struct *proc);
 struct proc_struct *find_proc(uint32_t pid);
 int kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags);
-int do_fork(uint32_t clone_flags, struct trapframe *tf)
+int do_fork(uint32_t clone_flags, struct trapframe *tf);
 
 // int proc_alloc(struct proc_struct **proc_p, uint32_t parent_pid);
 // void proc_free(struct proc_struct *);
@@ -78,8 +78,6 @@ int do_fork(uint32_t clone_flags, struct trapframe *tf)
 
 // int kernel_thread(int (*fn)(void *), void *arg);
 // void cpu_idle(void) __attribute__((noreturn));
-
-int do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf);
 
 
 

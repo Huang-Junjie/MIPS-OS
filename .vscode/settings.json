@@ -3,6 +3,7 @@
         "types.h": "c",
         "proc.h": "c",
         "error.h": "c",
-        "printf.h": "c"
+        "printf.h": "c",
+        "trap.h": "c"
     }
 }
