@@ -201,6 +201,6 @@ void proc_init(void) {
     panic("create init_main failed.\n");
   }
   initproc = find_proc(pid);
-  assert(idleproc != NULL && idleproc->pid == 0);
-  assert(initproc != NULL && initproc->pid == 1);
+  assert(idleproc != NULL && PROCX(idleproc->pid) == 0);
+  assert(initproc != NULL && PROCX(initproc->pid) == 1);
 }
