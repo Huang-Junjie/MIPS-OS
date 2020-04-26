@@ -79,5 +79,8 @@ void trap(struct trapframe *tf) {
     current->tf = tf;
     trap_dispatch(tf);
     current->tf = old_tf;
+    if (current->need_resched) {
+      schedule();
+    }
   }
 }
