@@ -57,7 +57,7 @@ static struct proc_struct *alloc_proc() {
   proc->tf = NULL;
   proc->parent = NULL;
   proc->cptr = proc->yptr = proc->optr = NULL;
-
+  list_init(&(proc->run_link));
   return proc;
 }
 
@@ -121,7 +121,7 @@ int do_fork(uint32_t clone_flags, struct trapframe *tf) {
   proc->context.regs[29] = (uintptr_t)(proc->tf); 
 
   //加入分配的进程控制块链表; 设置父子兄弟进程关系
-  list_add(&proc_list, &(proc->list_link));
+  list_add_after(&proc_list, &(proc->list_link));
   proc->parent = current;
   if ((proc->optr = proc->parent->cptr) != NULL) {
     proc->optr->yptr = proc;

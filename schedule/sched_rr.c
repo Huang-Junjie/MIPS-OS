@@ -2,6 +2,7 @@
 #include <list.h>
 #include <proc.h>
 #include <sched_rr.h>
+#include <printf.h>
 
 static void
 RR_init(struct run_queue *rq) {
@@ -22,7 +23,8 @@ RR_enqueue(struct run_queue *rq, struct proc_struct *proc) {
 static void
 RR_dequeue(struct run_queue *rq, struct proc_struct *proc) {
     assert(!list_empty(&(proc->run_link)));
-    list_del_init(&(proc->run_link));
+    list_del(&(proc->run_link));
+    list_init(&(proc->run_link));
     rq->proc_num --;
 }
 
