@@ -15,7 +15,7 @@ list_entry_t proc_list;              // 已分配的进程控制块链表
 static int nr_process = 0;
 
 void kernel_thread_entry(void);
-void forkret(struct trapframe *tf);
+void forkret();
 void switch_to(struct context *from, struct context *to);
 void set_asid(uint32_t asid);
 
@@ -34,7 +34,7 @@ struct proc_struct *find_proc(uint32_t pid) {
   return proc;
 }
 
-static struct proc_struct *proc_alloc() {
+static struct proc_struct *alloc_proc() {
   if (list_empty(&proc_free_list)) {
     return NULL;
   }

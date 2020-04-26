@@ -6,6 +6,8 @@
         "printf.h": "c",
         "trap.h": "c",
         "vmm.h": "c",
-        "sched_rr.h": "c"
+        "sched_rr.h": "c",
+        "pmm.h": "c",
+        "string.h": "c"
     }
 }

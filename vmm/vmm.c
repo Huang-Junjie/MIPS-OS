@@ -149,7 +149,7 @@ int mm_map(struct mm_struct *mm, uintptr_t addr, size_t len,
            uint32_t vm_flags) {
   assert(mm != NULL);
   struct vma_struct *vma;
-  uintptr_t start = ROUNDDOWN(addr, PGSIZE), end = ROUNDUP(addr + len, PGSIZE);
+  uintptr_t start = ROUNDDOWN(addr, PGSIZE), end = ROUND(addr + len, PGSIZE);
 
   if (find_vma(mm, start) || find_vma(mm, end)) {
     return -E_INVAL;

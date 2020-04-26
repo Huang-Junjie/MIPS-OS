@@ -346,7 +346,6 @@ unmap_range(pde_t *pgdir, uintptr_t start, uintptr_t end) {
 void
 exit_range(pde_t *pgdir, uintptr_t start, uintptr_t end) {
     assert(start % PGSIZE == 0 && end % PGSIZE == 0);
-    assert(USER_ACCESS(start, end));
 
     start = ROUNDDOWN(start, PDSIZE);
     do {
@@ -362,7 +361,7 @@ exit_range(pde_t *pgdir, uintptr_t start, uintptr_t end) {
 int
 copy_range(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end, bool share) {
     assert(start % PGSIZE == 0 && end % PGSIZE == 0);
-    assert(USER_ACCESS(start, end));
+
     // copy content by page unit.
     do {
         //call get_pte to find process A's pte according to the addr start

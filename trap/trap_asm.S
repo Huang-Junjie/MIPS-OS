@@ -27,3 +27,10 @@ random_write:
 random_write_b:
     jr      ra
 END(tlb_set)
+
+
+LEAF(forkret)
+    /* 恢复trapframe */
+    RESTORE_ALL
+    eret
+END(forkret)
