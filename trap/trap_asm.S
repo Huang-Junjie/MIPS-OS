@@ -1,6 +1,7 @@
 #include <asm/asm.h>
 #include <asm/regdef.h>
 #include <asm/cp0regdef.h>
+#include <stackframe.h>
 
 LEAF(tlb_set)
     tlbp
