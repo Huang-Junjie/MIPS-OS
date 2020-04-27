@@ -1,9 +1,9 @@
 #include <error.h>
 #include <pmm.h>
-#include <vmm.h>
 #include <printf.h>
 #include <proc.h>
 #include <string.h>
+#include <vmm.h>
 
 static struct proc_struct *procs = NULL;  // 所有的进程控制块
 struct proc_struct *current = NULL;
@@ -11,7 +11,6 @@ struct proc_struct *idleproc = NULL;
 static struct proc_struct *initproc = NULL;
 
 static list_entry_t proc_free_list;  // 未分配的进程控制块链表
-list_entry_t proc_list;              // 已分配的进程控制块链表
 static int nr_process = 0;
 
 void kernel_thread_entry(void);
@@ -118,7 +117,7 @@ int do_fork(uint32_t clone_flags, struct trapframe *tf) {
     proc->tf->regs[29] = proc->kstack + KSTACKSIZE;
   }
   proc->context.regs[31] = (uintptr_t)forkret;
-  proc->context.regs[29] = (uintptr_t)(proc->tf); 
+  proc->context.regs[29] = (uintptr_t)(proc->tf);
 
   //设置父子兄弟进程关系
   proc->parent = current;
@@ -168,8 +167,9 @@ static int init_main(void *arg) {
   //   assert(nr_free_pages_store == nr_free_pages());
   //   assert(kernel_allocated_store == kallocated());
   //   cprintf("init check memory pass.\n");
-  printf("init_main\n");
-  while(1) {}
+  kernel_thread(init_main, "init_main2", 0);
+  printf("init_main: %s\n", (const char *)arg);
+  printf("nr_process: %d\n", nr_process);
   return 0;
 }
 
@@ -202,4 +202,125 @@ void proc_init(void) {
   initproc = find_proc(pid);
   assert(idleproc != NULL && PROCX(idleproc->pid) == 0);
   assert(initproc != NULL && PROCX(initproc->pid) == 1);
+}
+
+void cpu_idle(void) {
+  while (1) {
+    if (current->need_resched) {
+      schedule();
+    }
+  }
+}
+
+int do_exit(int error_code) {
+  if (current == idleproc) {
+    panic("idleproc exit.\n");
+  }
+  if (current == initproc) {
+    panic("initproc exit.\n");
+  }
+
+  struct mm_struct *mm = current->mm;
+  if (mm != NULL) {
+    if (mm_count_dec(mm) == 0) {
+      exit_mmap(mm);
+      free_page(kva2page(mm->pgdir));
+      mm_destroy(mm);
+    }
+    current->mm = NULL;
+  }
+  current->state = PROC_ZOMBIE;
+  current->exit_code = error_code;
+
+  struct proc_struct *proc;
+  //唤醒等待子进程的父进程
+  proc = current->parent;
+  if (proc->wait_state == WT_CHILD) {
+    wakeup_proc(proc);
+  }
+
+  //将当前进程的子进程全部作为initproc的子进程
+  while (current->cptr != NULL) {
+    //取出当前进程的最新子进程
+    proc = current->cptr;
+    proc->yptr = NULL;
+    current->cptr = proc->optr;
+
+    //将该子进程的父进程设置为initproc
+    if ((proc->optr = initproc->cptr) != NULL) {
+      initproc->cptr->yptr = proc;
+    }
+    proc->parent = initproc;
+    initproc->cptr = proc;
+
+    //若该子进程已经退出,则唤醒initproc将其回收
+    if (proc->state == PROC_ZOMBIE) {
+      if (initproc->wait_state == WT_CHILD) {
+        wakeup_proc(initproc);
+      }
+    }
+  }
+
+  schedule();
+  panic("do_exit will not return!! %d.\n", current->pid);
+}
+
+
+int do_wait(int pid, int *code_store) {
+  struct proc_struct *proc;
+  bool haskid, found;
+  while (1) {
+    haskid = found = 0;
+    if (pid != 0) {
+      proc = find_proc(pid);
+      if (proc != NULL && proc->parent == current) {
+        haskid = 1;
+        if (proc->state == PROC_ZOMBIE) {
+          found = 1;
+        }
+      }
+    } else {
+      proc = current->cptr;
+      for (; proc != NULL; proc = proc->optr) {
+        haskid = 1;
+        if (proc->state == PROC_ZOMBIE) {
+          found = 1;
+          break;
+        }
+      }
+    }
+    //等待的子进程已经退出，回收其资源
+    if (found) {
+      if (proc == idleproc || proc == initproc) {
+        panic("wait idleproc or initproc.\n");
+      }
+      if (code_store != NULL) {
+        *code_store = proc->exit_code;
+      }
+      //回收进程控制块
+      list_add_before(&proc_free_list, &proc->free_list_link);
+      //设置父进程和兄弟进程关系
+      if (proc->optr != NULL) {
+        proc->optr->yptr = proc->yptr;
+      }
+      if (proc->yptr != NULL) {
+        proc->yptr->optr = proc->optr;
+      } else {
+        proc->parent->cptr = proc->optr;
+      }
+      nr_process--;
+      //回收内核栈
+      free_pages(kva2page((void *)(proc->kstack)), KSTACKPAGE);
+      return 0;
+    }
+    //如果等待的子进程未退出，则进入阻塞态，等待子进程唤醒
+    if (haskid) {
+      current->state = PROC_SLEEPING;
+      current->wait_state = WT_CHILD;
+      schedule();
+    } else {
+      //没有找到等待的子进程，返回错误码
+      return -E_BAD_PROC;
+    }
+  }
 }

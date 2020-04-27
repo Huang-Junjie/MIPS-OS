@@ -19,6 +19,6 @@ void init() {
     proc_init();
     clock_init(100);
 
-    while (1);
+    cpu_idle(); 
     panic("init.c:\tend of mips_init() reached!");
 }

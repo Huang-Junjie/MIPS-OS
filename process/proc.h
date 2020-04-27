@@ -65,6 +65,10 @@ void proc_run(struct proc_struct *proc);
 struct proc_struct *find_proc(uint32_t pid);
 int kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags);
 int do_fork(uint32_t clone_flags, struct trapframe *tf);
+void cpu_idle(void);
+
+int do_exit(int error_code);
+int do_wait(int pid, int *code_store);
 
 // int proc_alloc(struct proc_struct **proc_p, uint32_t parent_pid);
 // void proc_free(struct proc_struct *);
