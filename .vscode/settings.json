@@ -8,6 +8,7 @@
         "vmm.h": "c",
         "sched_rr.h": "c",
         "pmm.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "elf.h": "c"
     }
 }

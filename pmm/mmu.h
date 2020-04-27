@@ -87,9 +87,13 @@ typedef pte_t swap_entry_t;
 
 #define ULIM 0x80000000
 #define VPT  0x7fc00000
+#define USTACKTOP VPT
 
-#define KSTACKPAGE          2                           // # of pages in kernel stack
-#define KSTACKSIZE          (KSTACKPAGE * PGSIZE)       // sizeof kernel stack
+
+#define KSTACKPAGE          2                           // 内核栈页数
+#define KSTACKSIZE          (KSTACKPAGE * PGSIZE)       // 内核栈大小
+#define USTACKPAGE          256                         // 用户栈页数
+#define USTACKSIZE          (USTACKPAGE * PGSIZE)       // 用户栈大小
 
 #ifndef __ASSEMBLER__
 

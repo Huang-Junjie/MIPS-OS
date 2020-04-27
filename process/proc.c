@@ -1,3 +1,4 @@
+#include <elf.h>
 #include <error.h>
 #include <pmm.h>
 #include <printf.h>
@@ -167,9 +168,8 @@ static int init_main(void *arg) {
   //   assert(nr_free_pages_store == nr_free_pages());
   //   assert(kernel_allocated_store == kallocated());
   //   cprintf("init check memory pass.\n");
-  kernel_thread(init_main, "init_main2", 0);
-  printf("init_main: %s\n", (const char *)arg);
-  printf("nr_process: %d\n", nr_process);
+
+  printf("init_main\n");
   return 0;
 }
 
@@ -218,7 +218,7 @@ int do_exit(int error_code) {
   if (current == initproc) {
     panic("initproc exit.\n");
   }
-
+  //回收mm的资源
   struct mm_struct *mm = current->mm;
   if (mm != NULL) {
     if (mm_count_dec(mm) == 0) {
@@ -263,7 +263,6 @@ int do_exit(int error_code) {
   schedule();
   panic("do_exit will not return!! %d.\n", current->pid);
 }
-
 
 int do_wait(int pid, int *code_store) {
   struct proc_struct *proc;
@@ -322,4 +321,129 @@ int do_wait(int pid, int *code_store) {
       return -E_BAD_PROC;
     }
   }
+}
+
+static int load_icode(unsigned char *binary, size_t size) {
+  assert(current->mm == NULL);
+  struct mm_struct *mm;
+  struct Page *page;
+  uint32_t vm_flags, perm;
+
+  /* 为当前进程创建mm,建立页目录 */
+  mm = mm_create();
+  page = alloc_page();
+  pde_t *pgdir = page2kva(page);
+  pgdir[PDX(VPT)] = PADDR(pgdir) | PTE_V;
+  mm->pgdir = pgdir;
+  mm_count_inc(mm);
+  current->mm = mm;
+  current->pgdir = mm->pgdir;
+
+  /* 解析elf程序 */
+  // elf header
+  Elf32_Ehdr *elf = (Elf32_Ehdr *)binary;
+  //判断是否为elf格式
+  if (size < 4 || elf->e_ident[0] != EI_MAG0 || elf->e_ident[1] != EI_MAG1 ||
+      elf->e_ident[2] != EI_MAG2 || elf->e_ident[3] != EI_MAG3) {
+    return -1;
+  }
+  //遍历每个程序段
+  // program header table
+  Elf32_Phdr *ph = (Elf32_Phdr *)(binary + elf->e_phoff);
+  size_t ph_entry_count = elf->e_phnum;
+  while (ph_entry_count--) {
+    //判断是否为可加载的段
+    if (ph->p_type != PT_LOAD) {
+      continue;
+    }
+
+    //建立vma
+    vm_flags = 0, perm = 0;
+    if (ph->p_flags & PF_R) vm_flags |= VM_READ;
+    if (ph->p_flags & PF_X) vm_flags |= VM_EXEC;
+    if (ph->p_flags & PF_W) {
+      vm_flags |= VM_WRITE;
+      perm |= PTE_D;
+    }
+    mm_map(mm, ph->p_vaddr, ph->p_memsz, vm_flags);
+
+    //分配物理内存，复制程序段的内容到内存中
+    unsigned char *from = binary + ph->p_offset;
+    size_t off, size;
+    uintptr_t start = ph->p_vaddr, end, va = ROUNDDOWN(start, PGSIZE);
+    end = ph->p_vaddr + ph->p_filesz;
+    //复制程序内容
+    while (start < end) {
+      page = pgdir_alloc_page(mm->pgdir, va, perm);
+      off = start - va;
+      size = PGSIZE - off;
+      va += PGSIZE;
+      if (end < va) {
+        size -= va - end;
+      }
+      memcpy(page2kva(page) + off, from, size);
+      start += size;
+      from += size;
+    }
+
+    // bss段内存内容设为0
+    if (ph->p_memsz > ph->p_filesz) {
+      end = ph->p_vaddr + ph->p_memsz;
+      if (start < va) { 
+        //复制程序内容时分配的最后一个页的剩余内存
+        off = start + PGSIZE - va;
+        size = PGSIZE - off;
+        if (end < va) {
+          size -= va - end;
+        }
+        memset(page2kva(page) + off, 0, size);
+        start += size;
+        assert((end < va && start == end) || (end >= va && start == va));
+      }
+      while (start < end) {
+        page = pgdir_alloc_page(mm->pgdir, va, perm);
+        off = start - va;
+        size = PGSIZE - off;
+        va += PGSIZE;
+        if (end < va) {
+          size -= va - end;
+        }
+        memset(page2kva(page) + off, 0, size);
+        start += size;
+      }
+    }
+  }
+
+  //建立用户栈内存空间
+  vm_flags = VM_READ | VM_WRITE ;
+  mm_map(mm, USTACKTOP - USTACKSIZE, USTACKSIZE, vm_flags, NULL);
+  // pgdir_alloc_page(mm->pgdir, USTACKTOP - PGSIZE, PTE_D) != NULL;
+
+
+  //设置当前进程中断帧,使其异常返回后,回到用户态
+  memset(current->tf, 0, sizeof(struct trapframe));
+  current->tf->cp0_status = 0x1011;
+  current->tf->regs[29] = USTACKTOP;
+  current->tf->cp0_epc = elf->e_entry;
+
+  return 0;
+}
+
+int do_execve(unsigned char *binary, size_t size) {
+  //回收原来mm的资源
+  struct mm_struct *mm = current->mm;
+  if (mm != NULL) {
+    if (mm_count_dec(mm) == 0) {
+      exit_mmap(mm);
+      free_page(kva2page(mm->pgdir));
+      mm_destroy(mm);
+    }
+    current->mm = NULL;
+  }
+
+  int ret;
+  if ((ret = load_icode(binary, size)) != 0) {
+    do_exit(ret);
+  }
+  return 0;
 }

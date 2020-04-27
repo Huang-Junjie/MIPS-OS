@@ -25,7 +25,7 @@ static void handle_int(struct trapframe *tf) {
 }
 
 static void handle_mod(struct trapframe *tf) {
-  panic("write a non-writable addr: 0x%08x", tf->cp0_badvaddr);
+  pgfault_handler(tf);
 }
 
 extern void tlb_set(uintptr_t badvaddr, pte_t pte);

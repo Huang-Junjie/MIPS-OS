@@ -340,6 +340,13 @@ int do_pgfault(struct mm_struct *mm, uint32_t cause, uintptr_t addr) {
     goto failed;
   }
 
+  if (cause == 2 && !(vma->vm_flags & (VM_READ | VM_EXEC))) {
+    cprintf(
+        "do_pgfault failed: error code flag = read AND not present, but the "
+        "addr's vma cannot read or exec\n");
+    goto failed;
+  }
+
   if (cause == 3 && (!(vma->vm_flags & VM_WRITE))) {
     printf(
         "do_pgfault failed: error code flag = write AND not present, but the "
@@ -373,21 +380,25 @@ int do_pgfault(struct mm_struct *mm, uint32_t cause, uintptr_t addr) {
   } else {
     struct Page *page = NULL;
     printf("do pgfault: ptep %x, pte %x\n", ptep, *ptep);
+    
+    if (*ptep & PTE_V) {
+       panic("write a non-writable addr: 0x%08x", addr);
+    } else {
+      // if this pte is a swap entry, then load data from disk to a page with
+      // phy addr and call page_insert to map the phy addr with logical addr
+      if (swap_init_ok) {
+        if ((ret = swap_in(mm, addr, &page)) != 0) {
+          printf("swap_in in do_pgfault failed\n");
+          goto failed;
+        }
+        page_insert(mm->pgdir, page, addr, perm);
+        swap_map_swappable(mm, addr, page, 1);
+        page->pra_vaddr = addr;
 
-    // if this pte is a swap entry, then load data from disk to a page with phy
-    // addr and call page_insert to map the phy addr with logical addr
-    if (swap_init_ok) {
-      if ((ret = swap_in(mm, addr, &page)) != 0) {
-        printf("swap_in in do_pgfault failed\n");
+      } else {
+        printf("no swap_init_ok but ptep is %x, failed\n", *ptep);
         goto failed;
       }
-      page_insert(mm->pgdir, page, addr, perm);
-      swap_map_swappable(mm, addr, page, 1);
-      page->pra_vaddr = addr;
-
-    } else {
-      printf("no swap_init_ok but ptep is %x, failed\n", *ptep);
-      goto failed;
     }
   }
   ret = 0;

@@ -69,6 +69,7 @@ void cpu_idle(void);
 
 int do_exit(int error_code);
 int do_wait(int pid, int *code_store);
+int do_execve(unsigned char *binary, size_t size);
 
 // int proc_alloc(struct proc_struct **proc_p, uint32_t parent_pid);
 // void proc_free(struct proc_struct *);
