@@ -416,7 +416,7 @@ static int load_icode(unsigned char *binary, size_t size) {
 
   //建立用户栈内存空间
   vm_flags = VM_READ | VM_WRITE ;
-  mm_map(mm, USTACKTOP - USTACKSIZE, USTACKSIZE, vm_flags, NULL);
+  mm_map(mm, USTACKTOP - USTACKSIZE, USTACKSIZE, vm_flags);
   // pgdir_alloc_page(mm->pgdir, USTACKTOP - PGSIZE, PTE_D) != NULL;
 
 
