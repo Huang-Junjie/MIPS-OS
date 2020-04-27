@@ -37,7 +37,6 @@ struct proc_struct {
     struct trapframe *tf;   //当前中断的中断帧指针
     struct proc_struct *parent; //父进程
     struct proc_struct *cptr, *yptr, *optr; //子进程、弟进程、兄进程
-    list_entry_t list_link;  //已分配的进程控制块链表指针
     list_entry_t free_list_link;  //未分配的进程控制块链表指针
     list_entry_t run_link;  //就绪队列的进程控制块链表指针
 };

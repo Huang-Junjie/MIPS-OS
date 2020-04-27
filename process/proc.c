@@ -120,8 +120,7 @@ int do_fork(uint32_t clone_flags, struct trapframe *tf) {
   proc->context.regs[31] = (uintptr_t)forkret;
   proc->context.regs[29] = (uintptr_t)(proc->tf); 
 
-  //加入分配的进程控制块链表; 设置父子兄弟进程关系
-  list_add_after(&proc_list, &(proc->list_link));
+  //设置父子兄弟进程关系
   proc->parent = current;
   if ((proc->optr = proc->parent->cptr) != NULL) {
     proc->optr->yptr = proc;
