@@ -178,7 +178,6 @@ void proc_init(void) {
   int i;
   procs = kmalloc(sizeof(struct proc_struct) * MAX_PROCESS);
   list_init(&proc_free_list);
-  list_init(&proc_list);
   for (i = 0; i < MAX_PROCESS; i++) {
     (procs[i]).state = PROC_FREE;
     list_add_before(&proc_free_list, &(procs[i].free_list_link));
