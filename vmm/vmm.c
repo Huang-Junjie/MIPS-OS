@@ -341,7 +341,7 @@ int do_pgfault(struct mm_struct *mm, uint32_t cause, uintptr_t addr) {
   }
 
   if (cause == 2 && !(vma->vm_flags & (VM_READ | VM_EXEC))) {
-    cprintf(
+    printf(
         "do_pgfault failed: error code flag = read AND not present, but the "
         "addr's vma cannot read or exec\n");
     goto failed;
