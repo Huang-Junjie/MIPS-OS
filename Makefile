@@ -4,6 +4,7 @@ modules := drivers init lib trap pmm vmm process schedule sync user
 kernel := kernel
 swapimg := swap.img
 kernel_lds := tools/kernel.lds
+user_lds := tools/user.lds
 
 objects :=  init/*.o	\
 			lib/*.o	 \
