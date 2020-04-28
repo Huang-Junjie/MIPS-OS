@@ -29,7 +29,7 @@ user_bin_name   := _binary_user_user_code_out
 all: $(modules) $(kernel)
 
 $(modules):
-	$(MAKE) --directory=$@ "DEFS+=-DUSERSTART=$(user_bin_name)_start -DTESTSIZE=$(user_bin_name)_out_size"
+	$(MAKE) --directory=$@ "DEFS+=-DUSERSTART=$(user_bin_name)_start -DUSERSIZE=$(user_bin_name)_size"
 
 $(kernel): $(modules)
 	$(LD) -nostdlib -T $(user_lds) -o $(user_bin) $(user_objects)
