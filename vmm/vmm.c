@@ -4,6 +4,8 @@
 #include <pmm.h>
 #include <swap.h>
 #include <vmm.h>
+#include <proc.h>
+
 /*
   vmm design include two parts: mm_struct (mm) & vma_struct (vma)
   mm is the memory manager for the set of continuous virtual memory
@@ -380,9 +382,9 @@ int do_pgfault(struct mm_struct *mm, uint32_t cause, uintptr_t addr) {
   } else {
     struct Page *page = NULL;
     printf("do pgfault: ptep %x, pte %x\n", ptep, *ptep);
-    
+
     if (*ptep & PTE_V) {
-       panic("write a non-writable addr: 0x%08x", addr);
+      panic("write a non-writable addr: 0x%08x", addr);
     } else {
       // if this pte is a swap entry, then load data from disk to a page with
       // phy addr and call page_insert to map the phy addr with logical addr
@@ -413,13 +415,14 @@ int pgfault_handler(struct trapframe *tf) {
   }
   struct mm_struct *mm;
   if (check_mm_struct != NULL) {
+    assert(current == idleproc);
     mm = check_mm_struct;
   } else {
-    // if (current == NULL) {
-    //     print_pgfault(tf);
-    //     panic("unhandled page fault.\n");
-    // }
-    // mm = current->mm;
+    if (current == NULL) {
+      print_pgfault(tf);
+      panic("unhandled page fault.\n");
+    }
+    mm = current->mm;
   }
   return do_pgfault(mm, (tf->cp0_cause >> 2) & 0x01f, tf->cp0_badvaddr);
 }
