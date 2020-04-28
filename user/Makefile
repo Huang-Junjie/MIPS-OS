@@ -1,6 +1,6 @@
 include ../tools/include.mk
 
-INCLUDE := -I./ -Ilib/ -I../../include
+INCLUDE := -I./ -Ilib/ -I../include
 
 
 %.o: %.c
