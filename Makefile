@@ -33,7 +33,7 @@ $(modules):
 
 $(kernel): $(modules)
 	$(LD) -nostdlib -T $(user_lds) -o $(user_bin) $(user_objects)
-	$(LD) -nostdlib -T $(kernel_lds) -o $(kernel) $(objects) -b $(user_bin)
+	$(LD) -nostdlib -T $(kernel_lds) -o $(kernel) $(objects) -b binary $(user_bin)
 
 
 

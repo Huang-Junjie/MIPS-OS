@@ -409,8 +409,6 @@ static int init_main(void *arg) {
   assert(initproc->cptr == NULL && initproc->yptr == NULL &&
          initproc->optr == NULL);
   assert(nr_process == 2);
-
-  cprintf("init check memory pass.\n");
   return 0;
 }
 
