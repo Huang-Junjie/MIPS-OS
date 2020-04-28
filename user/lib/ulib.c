@@ -1,5 +1,6 @@
 #include <printf.h>
 #include <syscall.h>
+#include <types.h>
 
 void exit(int error_code) {
   sys_exit(error_code);
