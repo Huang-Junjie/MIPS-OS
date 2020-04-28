@@ -19,7 +19,7 @@ $(SWAPIMG):
 	$(V)dd if=/dev/zero of=$@ bs=1024k count=128
 
 clean:
-	rm -rf *.o
-	rm -rf $(SWAPIMG)
+	rm -rf *.o $(SWAPIMG)
+
 
 
