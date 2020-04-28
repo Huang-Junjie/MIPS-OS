@@ -4,8 +4,8 @@
 #include <printf.h>
 #include <proc.h>
 #include <string.h>
-#include <vmm.h>
 #include <sysnum.h>
+#include <vmm.h>
 
 static struct proc_struct *procs = NULL;  // 所有的进程控制块
 struct proc_struct *current = NULL;
@@ -291,8 +291,8 @@ static int load_icode(unsigned char *binary, size_t size) {
   //遍历每个程序段
   // program header table
   Elf32_Phdr *ph = (Elf32_Phdr *)(binary + elf->e_phoff);
-  size_t ph_entry_count = elf->e_phnum;
-  while (ph_entry_count--) {
+  struct proghdr *ph_end = ph + elf->e_phnum;
+  for (; ph < ph_end; ph++) {
     //判断是否为可加载的段
     if (ph->p_type != PT_LOAD) {
       continue;

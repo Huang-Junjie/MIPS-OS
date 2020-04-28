@@ -45,26 +45,26 @@ static void handle_tlb(struct trapframe *tf) {
 }
 
 static void syscall(struct trapframe *tf) {
-  int num = tf->regs[16];
+  int num = tf->regs[8];
   int ret = 0;
   switch (num) {
     case SYS_exit:
-      ret = do_exit(tf->regs[17]);
+      ret = do_exit(tf->regs[9]);
       break;
     case SYS_fork:
       ret = do_fork(0, tf);
       break;
     case SYS_wait:
-      ret = do_wait(tf->regs[17], tf->regs[18]);
+      ret = do_wait(tf->regs[9], tf->regs[10]);
       break;
     case SYS_exec:
-      ret = do_execve(tf->regs[17], tf->regs[18]);
+      ret = do_execve(tf->regs[9], tf->regs[10]);
       break;
     case SYS_sleep:
       //
       break;
     case SYS_putc:
-      printf("%c", tf->regs[17]);
+      printf("%c", tf->regs[9]);
   }
   tf->regs[2] = ret;  //设置返回值
 }
