@@ -1,7 +1,7 @@
 #include <pmm.h>
 #include <printf.h>
 #include <proc.h>
-#include <syscall_number.h>
+#include <sysnum.h>
 #include <trap.h>
 #include <vmm.h>
 
@@ -57,6 +57,9 @@ static void syscall(struct trapframe *tf) {
     case SYS_wait:
       ret = do_wait(tf->regs[17], tf->regs[18]);
       break;
+    case SYS_exec:
+      ret = do_execve(tf->regs[17], tf->regs[18]);
+      break;
     case SYS_sleep:
       //
       break;
@@ -64,7 +67,6 @@ static void syscall(struct trapframe *tf) {
       printf("%c", tf->regs[17]);
   }
   tf->regs[2] = ret;  //设置返回值
-  tf->cp0_epc += 4;   //返回syscall下条指令
 }
 
 static void trap_dispatch(struct trapframe *tf) {
@@ -79,7 +81,8 @@ static void trap_dispatch(struct trapframe *tf) {
     case 3:  // TLBS
       handle_tlb(tf);
       break;
-    case 8:  // Syscall
+    case 8:              // Syscall
+      tf->cp0_epc += 4;  //返回syscall下条指令
       syscall(tf);
   }
 }

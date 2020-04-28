@@ -1,5 +1,5 @@
 #include <syscall.h>
-#include <syscall_number.h>
+#include <sysnum.h>
 
 extern int syscall(int num, ...);
 

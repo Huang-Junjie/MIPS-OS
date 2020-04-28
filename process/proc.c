@@ -5,6 +5,7 @@
 #include <proc.h>
 #include <string.h>
 #include <vmm.h>
+#include <sysnum.h>
 
 static struct proc_struct *procs = NULL;  // 所有的进程控制块
 struct proc_struct *current = NULL;
@@ -65,7 +66,6 @@ void proc_run(struct proc_struct *proc) {
   if (proc != current) {
     struct proc_struct *prev = current, *next = proc;
     current = proc;
-    // load_kernel_sp(next->kstack + KSTACKSIZE);
     set_asid(GET_PROC_ASID(current->pid));
     switch_to(&(prev->context), &(next->context));
   }
@@ -388,9 +388,14 @@ int do_execve(unsigned char *binary, size_t size) {
   return 0;
 }
 
+extern int syscall(int num, ...);
+static int kernel_execve(unsigned char *binary, size_t size) {
+  return syscall(SYS_exec, binary, size);
+}
+
 static int user_main(void *arg) {
   extern unsigned char USERSTART[], USERSIZE[];
-  do_execve(USERSTART, (size_t)USERSIZE);
+  kernel_execve(USERSTART, (size_t)USERSIZE);
 }
 
 static int init_main(void *arg) {

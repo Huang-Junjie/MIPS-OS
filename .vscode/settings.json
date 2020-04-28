@@ -11,6 +11,7 @@
         "string.h": "c",
         "elf.h": "c",
         "syscall.h": "c",
-        "syscall_number.h": "c"
+        "syscall_number.h": "c",
+        "sysnum.h": "c"
     }
 }
