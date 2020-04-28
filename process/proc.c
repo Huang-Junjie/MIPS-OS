@@ -144,65 +144,6 @@ int kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags) {
   return do_fork(clone_flags | CLONE_VM, &tf);
 }
 
-static int init_main(void *arg) {
-  //   size_t nr_free_pages_store = nr_free_pages();
-  //   size_t kernel_allocated_store = kallocated();
-
-  //   int pid = kernel_thread(user_main, NULL, 0);
-  //   if (pid <= 0) {
-  //     panic("create user_main failed.\n");
-  //   }
-  //   extern void check_sync(void);
-  //   check_sync();  // check philosopher sync problem
-
-  //   while (do_wait(0, NULL) == 0) {
-  //     schedule();
-  //   }
-
-  //   cprintf("all user-mode processes have quit.\n");
-  //   assert(initproc->cptr == NULL && initproc->yptr == NULL &&
-  //          initproc->optr == NULL);
-  //   assert(nr_process == 2);
-  //   assert(list_next(&proc_list) == &(initproc->list_link));
-  //   assert(list_prev(&proc_list) == &(initproc->list_link));
-  //   assert(nr_free_pages_store == nr_free_pages());
-  //   assert(kernel_allocated_store == kallocated());
-  //   cprintf("init check memory pass.\n");
-
-  printf("init_main\n");
-  return 0;
-}
-
-void proc_init(void) {
-  //初始化进程控制块和进程控制块链表
-  int i;
-  procs = kmalloc(sizeof(struct proc_struct) * MAX_PROCESS);
-  list_init(&proc_free_list);
-  for (i = 0; i < MAX_PROCESS; i++) {
-    (procs[i]).state = PROC_FREE;
-    list_add_before(&proc_free_list, &(procs[i].free_list_link));
-  }
-
-  //将当前上下文打造为idleproc
-  if ((idleproc = alloc_proc()) == NULL) {
-    panic("alloc idleproc failed.\n");
-  }
-  idleproc->state = PROC_RUNNABLE;
-  idleproc->kstack = (uintptr_t)0x80400000;
-  idleproc->need_resched = 1;
-  nr_process++;
-  current = idleproc;
-
-  //创建initproc内核线程
-  int pid = kernel_thread(init_main, NULL, 0);
-  if (pid <= 0) {
-    panic("create init_main failed.\n");
-  }
-  initproc = find_proc(pid);
-  assert(idleproc != NULL && PROCX(idleproc->pid) == 0);
-  assert(initproc != NULL && PROCX(initproc->pid) == 1);
-}
-
 void cpu_idle(void) {
   while (1) {
     if (current->need_resched) {
@@ -261,7 +202,7 @@ int do_exit(int error_code) {
   }
 
   schedule();
-  panic("do_exit will not return!! %d.\n", current->pid);
+  panic("do_exit will not return! %d.\n", current->pid);
 }
 
 int do_wait(int pid, int *code_store) {
@@ -389,7 +330,7 @@ static int load_icode(unsigned char *binary, size_t size) {
     // bss段内存内容设为0
     if (ph->p_memsz > ph->p_filesz) {
       end = ph->p_vaddr + ph->p_memsz;
-      if (start < va) { 
+      if (start < va) {
         //复制程序内容时分配的最后一个页的剩余内存
         off = start + PGSIZE - va;
         size = PGSIZE - off;
@@ -415,10 +356,9 @@ static int load_icode(unsigned char *binary, size_t size) {
   }
 
   //建立用户栈内存空间
-  vm_flags = VM_READ | VM_WRITE ;
+  vm_flags = VM_READ | VM_WRITE;
   mm_map(mm, USTACKTOP - USTACKSIZE, USTACKSIZE, vm_flags);
   // pgdir_alloc_page(mm->pgdir, USTACKTOP - PGSIZE, PTE_D) != NULL;
-
 
   //设置当前进程中断帧,使其异常返回后,回到用户态
   memset(current->tf, 0, sizeof(struct trapframe));
@@ -446,4 +386,60 @@ int do_execve(unsigned char *binary, size_t size) {
     do_exit(ret);
   }
   return 0;
+}
+
+static int user_main(void *arg) {
+  extern unsigned char USERSTART[], USERSIZE[];
+  do_execve(USERSTART, (size_t)USERSIZE);
+}
+
+static int init_main(void *arg) {
+  int pid = kernel_thread(user_main, NULL, 0);
+  if (pid <= 0) {
+    panic("create user_main failed.\n");
+  }
+  // extern void check_sync(void);
+  // check_sync();  // check philosopher sync problem
+
+  while (do_wait(0, NULL) == 0) {
+    schedule();
+  }
+
+  printf("all user-mode processes have quit.\n");
+  assert(initproc->cptr == NULL && initproc->yptr == NULL &&
+         initproc->optr == NULL);
+  assert(nr_process == 2);
+
+  cprintf("init check memory pass.\n");
+  return 0;
+}
+
+void proc_init(void) {
+  //初始化进程控制块和进程控制块链表
+  int i;
+  procs = kmalloc(sizeof(struct proc_struct) * MAX_PROCESS);
+  list_init(&proc_free_list);
+  for (i = 0; i < MAX_PROCESS; i++) {
+    (procs[i]).state = PROC_FREE;
+    list_add_before(&proc_free_list, &(procs[i].free_list_link));
+  }
+
+  //将当前上下文打造为idleproc
+  if ((idleproc = alloc_proc()) == NULL) {
+    panic("alloc idleproc failed.\n");
+  }
+  idleproc->state = PROC_RUNNABLE;
+  idleproc->kstack = (uintptr_t)0x80400000;
+  idleproc->need_resched = 1;
+  nr_process++;
+  current = idleproc;
+
+  //创建initproc内核线程
+  int pid = kernel_thread(init_main, NULL, 0);
+  if (pid <= 0) {
+    panic("create init_main failed.\n");
+  }
+  initproc = find_proc(pid);
+  assert(idleproc != NULL && PROCX(idleproc->pid) == 0);
+  assert(initproc != NULL && PROCX(initproc->pid) == 1);
 }

@@ -116,12 +116,7 @@ typedef pte_t swap_entry_t;
         })
 
 
-#define assert(x)                                   \
-    do {                                            \
-        if (!(x)) {                                 \
-            panic("assertion failed: %s", #x);      \
-        }                                           \
-    } while (0)
+
 
 
 #endif /* __ASSEMBLER__ */

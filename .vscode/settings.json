@@ -9,6 +9,8 @@
         "sched_rr.h": "c",
         "pmm.h": "c",
         "string.h": "c",
-        "elf.h": "c"
+        "elf.h": "c",
+        "syscall.h": "c",
+        "syscall_number.h": "c"
     }
 }

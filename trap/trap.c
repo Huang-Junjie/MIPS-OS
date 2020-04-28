@@ -1,6 +1,7 @@
 #include <pmm.h>
 #include <printf.h>
 #include <proc.h>
+#include <syscall_number.h>
 #include <trap.h>
 #include <vmm.h>
 
@@ -24,9 +25,7 @@ static void handle_int(struct trapframe *tf) {
   }
 }
 
-static void handle_mod(struct trapframe *tf) {
-  pgfault_handler(tf);
-}
+static void handle_mod(struct trapframe *tf) { pgfault_handler(tf); }
 
 extern void tlb_set(uintptr_t badvaddr, pte_t pte);
 extern struct proc_struct *current;
@@ -45,6 +44,29 @@ static void handle_tlb(struct trapframe *tf) {
   }
 }
 
+static void syscall(struct trapframe *tf) {
+  int num = tf->regs[16];
+  int ret = 0;
+  switch (num) {
+    case SYS_exit:
+      ret = do_exit(tf->regs[17]);
+      break;
+    case SYS_fork:
+      ret = do_fork(0, tf);
+      break;
+    case SYS_wait:
+      ret = do_wait(tf->regs[17], tf->regs[18]);
+      break;
+    case SYS_sleep:
+      //
+      break;
+    case SYS_putc:
+      printf("%c", tf->regs[17]);
+  }
+  tf->regs[2] = ret;  //设置返回值
+  tf->cp0_epc += 4;   //返回syscall下条指令
+}
+
 static void trap_dispatch(struct trapframe *tf) {
   switch ((tf->cp0_cause & 0x7c) >> 2) {
     case 0:  // Int
@@ -58,7 +80,7 @@ static void trap_dispatch(struct trapframe *tf) {
       handle_tlb(tf);
       break;
     case 8:  // Syscall
-        ;
+      syscall(tf);
   }
 }
 
