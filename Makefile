@@ -26,13 +26,15 @@ user_bin_name   := _binary_user_user_code_out
 
 .PHONY: all $(modules) clean start debug
 
-all: $(modules) $(kernel)
+all: $(modules) $(kernel) $(user_bin)
 
 $(modules):
 	$(MAKE) --directory=$@ "DEFS+=-DUSERSTART=$(user_bin_name)_start -DUSERSIZE=$(user_bin_name)_size"
 
-$(kernel): $(modules)
+$(user_bin):
 	$(LD) -nostdlib -T $(user_lds) -o $(user_bin) $(user_objects)
+
+$(kernel): $(modules) $(user_bin)
 	$(LD) -nostdlib -T $(kernel_lds) -o $(kernel) $(objects) -b binary $(user_bin)
 
 

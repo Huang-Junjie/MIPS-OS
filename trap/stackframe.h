@@ -72,6 +72,8 @@ save_start:
 .set noat
     lw      k0, TF_EPC(sp)
     mtc0    k0, CP0_EPC
+    lw      k0, TF_STATUS(sp)
+    mtc0    k0, CP0_STATUS
 
     lw      k0, TF_LO(sp)
     mtlo    k0

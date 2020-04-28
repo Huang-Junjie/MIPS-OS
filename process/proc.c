@@ -284,8 +284,8 @@ static int load_icode(unsigned char *binary, size_t size) {
   // elf header
   Elf32_Ehdr *elf = (Elf32_Ehdr *)binary;
   //判断是否为elf格式
-  if (size < 4 || elf->e_ident[0] != EI_MAG0 || elf->e_ident[1] != EI_MAG1 ||
-      elf->e_ident[2] != EI_MAG2 || elf->e_ident[3] != EI_MAG3) {
+  if (size < 4 || elf->e_ident[0] != ELFMAG0 || elf->e_ident[1] != ELFMAG1 ||
+      elf->e_ident[2] != ELFMAG2 || elf->e_ident[3] != ELFMAG3) {
     return -1;
   }
   //遍历每个程序段
@@ -362,7 +362,7 @@ static int load_icode(unsigned char *binary, size_t size) {
 
   //设置当前进程中断帧,使其异常返回后,回到用户态
   memset(current->tf, 0, sizeof(struct trapframe));
-  current->tf->cp0_status = 0x1011;
+  current->tf->cp0_status = 0x1013;
   current->tf->regs[29] = USTACKTOP;
   current->tf->cp0_epc = elf->e_entry;
 
