@@ -1,7 +1,7 @@
 #include <printf.h>
 #include <stdarg.h>
 
-void putChar(char ch) { sys_putc(c); }
+void putChar(char ch) { sys_putc(ch); }
 
 void printStr(const char *s, int width, int padc) {
   char *s1 = s;
