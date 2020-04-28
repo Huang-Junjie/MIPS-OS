@@ -91,3 +91,14 @@ LEAF(set_asid)
     mtc0    t0, CP0_ENTRYHI
     jr      ra
 END(set_asid)
+
+LEAF(syscall)
+    move    t0, a0      //syscall number
+    move    t1, a1      //arg1
+    move    t2, a2      //arg2
+    move    t3, a3      //arg3
+    lw      t4, 16(sp)  //arg4
+    lw      t5, 20(sp)  //arg5
+    syscall
+    jr      ra
+END(syscall) 
