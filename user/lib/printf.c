@@ -1,4 +1,5 @@
 #include <printf.h>
+#include <syscall.h>
 #include <stdarg.h>
 
 void putChar(char ch) { sys_putc(ch); }
