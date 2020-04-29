@@ -1,5 +1,5 @@
-#ifndef __KERN_MM_SWAP_H__
-#define __KERN_MM_SWAP_H__
+#ifndef _SWAP_H_
+#define _SWAP_H_
 
 #include <types.h>
 #include <mmu.h>
@@ -61,4 +61,4 @@ int swap_in(struct mm_struct *mm, uintptr_t addr, struct Page **ptr_result);
 //#define MEMBER_OFFSET(m,t) ((int)(&((t *)0)->m))
 //#define FROM_MEMBER(m,t,a) ((t *)((char *)(a) - MEMBER_OFFSET(m,t)))
 
-#endif
+#endif /* _SWAP_H_ */

@@ -1,5 +1,5 @@
-#ifndef __KERN_SCHEDULE_SCHED_H__
-#define __KERN_SCHEDULE_SCHED_H__
+#ifndef _SCHED_H_
+#define _SCHED_H_
 
 #include <types.h>
 #include <list.h>
@@ -65,5 +65,5 @@ void schedule(void);
 // void del_timer(timer_t *timer);
 // void run_timer_list(void);
 
-#endif /* !__KERN_SCHEDULE_SCHED_H__ */
+#endif /* _SCHED_H_ */
 

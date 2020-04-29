@@ -32,9 +32,6 @@
  */
 
 
-//some helper
-// #define spin_lock_irqsave(l, f) local_intr_save(f)
-// #define spin_unlock_irqrestore(l, f) local_intr_restore(f)
 typedef unsigned int gfp_t;
 #ifndef PAGE_SIZE
 #define PAGE_SIZE PGSIZE
@@ -177,33 +174,6 @@ static void slob_free(void *block, int size)
     // spin_unlock_irqrestore(&slob_lock, flags);
 }
 
-
-
-void check_slab(void) {
-  printf("check_slab() success\n");
-}
-
-void
-slab_init(void) {
-  printf("use SLOB allocator\n");
-  check_slab();
-}
-
-inline void
-kmalloc_init(void) {
-    slab_init();
-    printf("kmalloc_init() succeeded!\n");
-}
-
-size_t
-slab_allocated(void) {
-  return 0;
-}
-
-size_t
-kallocated(void) {
-   return slab_allocated();
-}
 
 static int find_order(int size)
 {

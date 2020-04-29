@@ -2,9 +2,9 @@
 #include <kmalloc.h>
 #include <mmu.h>
 #include <pmm.h>
+#include <proc.h>
 #include <swap.h>
 #include <vmm.h>
-#include <proc.h>
 
 /*
   vmm design include two parts: mm_struct (mm) & vma_struct (vma)

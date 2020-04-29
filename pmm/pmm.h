@@ -149,14 +149,5 @@ int copy_range(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end, bool shar
 void print_pgdir(void);
 
 
-static inline void
-ppage(struct Page *page) {
-    printf("-----------------\n");
-    printf("%d\n", page->ref);
-    printf("0x%x\n", page->flags);
-    printf("%d\n", page->property);
-    printf("-----------------\n");
-}
-
 
 #endif /* _PMM_H_ */

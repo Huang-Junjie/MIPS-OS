@@ -1,5 +1,5 @@
-#ifndef __KERN_MM_VMM_H__
-#define __KERN_MM_VMM_H__
+#ifndef _VMM_H_
+#define _VMM_H_
 
 #include <list.h>
 #include <trap.h>
@@ -76,4 +76,4 @@ mm_count_dec(struct mm_struct *mm) {
     mm->mm_count -= 1;
     return mm->mm_count;
 }
-#endif /* !__KERN_MM_VMM_H__ */
+#endif /* _VMM_H_ */

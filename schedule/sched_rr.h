@@ -1,9 +1,9 @@
-#ifndef __KERN_SCHEDULE_SCHED_RR_H__
-#define __KERN_SCHEDULE_SCHED_RR_H__
+#ifndef _SCHED_RR_H_
+#define _SCHED_RR_H_
 
 #include <sched.h>
 
 extern struct sched_class default_sched_class;
 
-#endif /* !__KERN_SCHEDULE_SCHED_RR_H__ */
+#endif /* _SCHED_RR_H_ */
 
