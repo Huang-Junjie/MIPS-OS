@@ -5,7 +5,7 @@
 #include <string.h>
 #include <swap.h>
 
-size_t npage; /* Amount of memory(in pages) */
+size_t npage;
 struct Page *pages;
 extern pde_t _boot_pgdir;
 pde_t *boot_pgdir = &_boot_pgdir;
@@ -18,20 +18,19 @@ static void check_alloc_page(void);
 static void check_pgdir(void);
 static void check_boot_pgdir(void);
 
-// init_pmm_manager - initialize a pmm_manager instance
+// 初始化pmm_manager实例
 static void init_pmm_manager(void) {
   pmm_manager = &firstfit_pmm_manager;
   printf("memory manager: %s\n", pmm_manager->name);
   pmm_manager->init();
 }
 
-// init_memmap - call pmm->init_memmap to build Page struct for free memory
+// 为空闲内存建立Page结构
 static void init_memmap(struct Page *base, size_t n) {
   pmm_manager->init_memmap(base, n);
 }
 
-// alloc_pages - call pmm->alloc_pages to allocate a continuous n*PAGESIZE
-// memory
+// 分配n个连续物理内存页
 struct Page *alloc_pages(size_t n) {
   struct Page *page = NULL;
 
@@ -45,22 +44,20 @@ struct Page *alloc_pages(size_t n) {
   return page;
 }
 
-// free_pages - call pmm->free_pages to free a continuous n*PAGESIZE memory
+// 释放n个连续物理内存页
 void free_pages(struct Page *base, size_t n) {
   pmm_manager->free_pages(base, n);
 }
 
-// nr_free_pages - call pmm->nr_free_pages to get the size (nr*PAGESIZE)
-// of current free memory
+// 获得剩余空闲页个数 
 size_t nr_free_pages(void) { return pmm_manager->nr_free_pages(); }
 
-/* pmm_init - initialize the physical memory management */
+
 static void page_init(void) {
   extern char end[];
   uintptr_t maxpa;
   int i;
 
-  // bios
   maxpa = 0x04000000;
   npage = maxpa / PGSIZE;
   pages = (struct Page *)ROUND((void *)end, PGSIZE);
@@ -76,109 +73,30 @@ static void page_init(void) {
   init_memmap(pa2page(freemem), (maxpa - freemem) / PGSIZE);
 }
 
-// boot_map_segment - setup&enable the paging mechanism
-// parameters
-//  la:   linear address of this memory need to map (after x86 segment map)
-//  size: memory size
-//  pa:   physical address of this memory
-//  perm: permission of this memory
-static void boot_map_segment(pde_t *pgdir, uintptr_t la, size_t size,
-                             uintptr_t pa, uint32_t perm) {
-  assert(PGOFF(la) == PGOFF(pa));
-  size_t n = ROUND(size + PGOFF(la), PGSIZE) / PGSIZE;
-  la = ROUNDDOWN(la, PGSIZE);
-  pa = ROUNDDOWN(pa, PGSIZE);
-  for (; n > 0; n--, la += PGSIZE, pa += PGSIZE) {
-    pte_t *ptep = get_pte(pgdir, la, 1);
-    assert(ptep != NULL);
-    *ptep = pa | PTE_V | perm;
-  }
-}
 
-// boot_alloc_page - allocate one page using pmm->alloc_pages(1)
-// return value: the kernel virtual address of this allocated page
-// note: this function is used to get the memory for PDT(Page Directory
-// Table)&PT(Page Table)
-static void *boot_alloc_page(void) {
-  struct Page *p = alloc_page();
-  if (p == NULL) {
-    panic("boot_alloc_page failed.\n");
-  }
-  return page2kva(p);
-}
 
-// pmm_init - setup a pmm to manage physical memory, build PDT&PT to setup
-// paging mechanism
-//         - check the correctness of pmm & paging mechanism, print PDT&PT
 void pmm_init(void) {
-  // We need to alloc/free the physical memory (granularity is 4KB or other
-  // size). So a framework of physical memory manager (struct pmm_manager)is
-  // defined in pmm.h First we should init a physical memory manager(pmm) based
-  // on the framework. Then pmm can alloc/free the physical memory. Now the
-  // first_fit/best_fit/worst_fit/buddy_system pmm are available.
   init_pmm_manager();
-  // detect physical memory space, reserve already used memory,
-  // then use pmm->init_memmap to create free page list
   page_init();
 
-  // use pmm->check to verify the correctness of the alloc/free function in a
-  // pmm
   check_alloc_page();
-
   check_pgdir();
 
-  // recursively insert boot_pgdir in itself
-  // to form a virtual page table at virtual address VPT
   boot_pgdir[PDX(VPT)] = PADDR(boot_pgdir) | PTE_V;
-
-  // now the basic virtual memory map(see memalyout.h) is established.
-  // check the correctness of the basic virtual memory map.
   check_boot_pgdir();
 
   print_pgdir();
 }
 
-// get_pte - get pte and return the kernel virtual address of this pte for la
+// get_pte - get pte and return the kernel virtual address of this pte for va
 //        - if the PT contians this pte didn't exist, alloc a page for PT
 // parameter:
 //  pgdir:  the kernel virtual base address of PDT
-//  la:     the linear address need to map
+//  va:     the linear address need to map
 //  create: a logical value to decide if alloc a page for PT
 // return vaule: the kernel virtual address of this pte
-pte_t *get_pte(pde_t *pgdir, uintptr_t la, bool create) {
-  /* LAB2 EXERCISE 2: YOUR CODE
-   *
-   * If you need to visit a physical address, please use KADDR()
-   * please read pmm.h for useful macros
-   *
-   * Maybe you want help comment, BELOW comments can help you finish the code
-   *
-   * Some Useful MACROs and DEFINEs, you can use them in below implementation.
-   * MACROs or Functions:
-   *   PDX(la) = the index of page directory entry of VIRTUAL ADDRESS la.
-   *   KADDR(pa) : takes a physical address and returns the corresponding kernel
-   * virtual address. set_page_ref(page,1) : means the page be referenced by one
-   * time page2pa(page): get the physical address of memory which this (struct
-   * Page *) page  manages struct Page * alloc_page() : allocation a page
-   *   memset(void *s, char c, size_t n) : sets the first n bytes of the memory
-   * area pointed by s to the specified value c. DEFINEs: PTE_V           0x001
-   * // page table/directory entry flags bit : Present PTE_D           0x002 //
-   * page table/directory entry flags bit : Writeable PTE_U           0x004 //
-   * page table/directory entry flags bit : User can access
-   */
-#if 0
-    pde_t *pdep = NULL;   // (1) find page directory entry
-    if (0) {              // (2) check if entry is not present
-        // (3) check if creating is needed, then alloc page for page table
-        // CAUTION: this page is used for page table, not for common data page
-        // (4) set page reference
-        uintptr_t pa = 0; // (5) get linear address of page
-        // (6) clear page content using memset
-        // (7) set page directory entry's permission
-    }
-    return NULL;          // (8) return page table entry
-#endif
-  pde_t *pdep = &pgdir[PDX(la)];
+pte_t *get_pte(pde_t *pgdir, uintptr_t va, bool create) {
+  pde_t *pdep = &pgdir[PDX(va)];
   if (!(*pdep & PTE_V)) {
     struct Page *page;
     if (!create || (page = alloc_page()) == NULL) {
@@ -189,12 +107,12 @@ pte_t *get_pte(pde_t *pgdir, uintptr_t la, bool create) {
     memset(KADDR(pa), 0, PGSIZE);
     *pdep = pa | PTE_D | PTE_V;
   }
-  return &((pte_t *)KADDR(PDE_ADDR(*pdep)))[PTX(la)];
+  return &((pte_t *)KADDR(PDE_ADDR(*pdep)))[PTX(va)];
 }
 
-// get_page - get related Page struct for linear address la using PDT pgdir
-struct Page *get_page(pde_t *pgdir, uintptr_t la, pte_t **ptep_store) {
-  pte_t *ptep = get_pte(pgdir, la, 0);
+// get_page - get revated Page struct for linear address va using PDT pgdir
+struct Page *get_page(pde_t *pgdir, uintptr_t va, pte_t **ptep_store) {
+  pte_t *ptep = get_pte(pgdir, va, 0);
   if (ptep_store != NULL) {
     *ptep_store = ptep;
   }
@@ -204,65 +122,39 @@ struct Page *get_page(pde_t *pgdir, uintptr_t la, pte_t **ptep_store) {
   return NULL;
 }
 
-// page_remove_pte - free an Page sturct which is related linear address la
-//                - and clean(invalidate) pte which is related linear address la
+// page_remove_pte - free an Page sturct which is revated linear address va
+//                - and clean(invalidate) pte which is revated linear address va
 // note: PT is changed, so the TLB need to be invalidate
-static inline void page_remove_pte(pde_t *pgdir, uintptr_t la, pte_t *ptep) {
-  /* LAB2 EXERCISE 3: YOUR CODE
-   *
-   * Please check if ptep is valid, and tlb must be manually updated if mapping
-   * is updated
-   *
-   * Maybe you want help comment, BELOW comments can help you finish the code
-   *
-   * Some Useful MACROs and DEFINEs, you can use them in below implementation.
-   * MACROs or Functions:
-   *   struct Page *page pte2page(*ptep): get the according page from the value
-   * of a ptep free_page : free a page page_ref_dec(page) : decrease page->ref.
-   * NOTICE: ff page->ref == 0 , then this page should be free.
-   *   tlb_invalidate(pde_t *pgdir, uintptr_t la) : Invalidate a TLB entry, but
-   * only if the page tables being edited are the ones currently in use by the
-   * processor. DEFINEs: PTE_V           0x001                   // page
-   * table/directory entry flags bit : Present
-   */
-#if 0
-    if (0) {                      //(1) check if page directory is present
-        struct Page *page = NULL; //(2) find corresponding page to pte
-        //(3) decrease page reference
-        //(4) and free this page when page reference reachs 0
-        //(5) clear second page table entry
-        //(6) flush tlb
-    }
-#endif
+static inline void page_remove_pte(pde_t *pgdir, uintptr_t va, pte_t *ptep) {
   if (*ptep & PTE_V) {
     struct Page *page = pte2page(*ptep);
     if (page_ref_dec(page) == 0) {
       free_page(page);
     }
     *ptep = 0;
-    tlb_invalidate(pgdir, la);
+    tlb_invalidate(pgdir, va);
   }
 }
 
-// page_remove - free an Page which is related linear address la and has an
+// page_remove - free an Page which is revated linear address va and has an
 // validated pte
-void page_remove(pde_t *pgdir, uintptr_t la) {
-  pte_t *ptep = get_pte(pgdir, la, 0);
+void page_remove(pde_t *pgdir, uintptr_t va) {
+  pte_t *ptep = get_pte(pgdir, va, 0);
   if (ptep != NULL) {
-    page_remove_pte(pgdir, la, ptep);
+    page_remove_pte(pgdir, va, ptep);
   }
 }
 
-// page_insert - build the map of phy addr of an Page with the linear addr la
+// page_insert - build the map of phy addr of an Page with the linear addr va
 // paramemters:
 //  pgdir: the kernel virtual base address of PDT
 //  page:  the Page which need to map
-//  la:    the linear address need to map
-//  perm:  the permission of this Page which is setted in related pte
+//  va:    the linear address need to map
+//  perm:  the permission of this Page which is setted in revated pte
 // return value: always 0
 // note: PT is changed, so the TLB need to be invalidate
-int page_insert(pde_t *pgdir, struct Page *page, uintptr_t la, uint32_t perm) {
-  pte_t *ptep = get_pte(pgdir, la, 1);
+int page_insert(pde_t *pgdir, struct Page *page, uintptr_t va, uint32_t perm) {
+  pte_t *ptep = get_pte(pgdir, va, 1);
   if (ptep == NULL) {
     return -E_NO_MEM;
   }
@@ -272,11 +164,11 @@ int page_insert(pde_t *pgdir, struct Page *page, uintptr_t la, uint32_t perm) {
     if (p == page) {
       page_ref_dec(page);
     } else {
-      page_remove_pte(pgdir, la, ptep);
+      page_remove_pte(pgdir, va, ptep);
     }
   }
   *ptep = page2pa(page) | PTE_V | perm;
-  tlb_invalidate(pgdir, la);
+  tlb_invalidate(pgdir, va);
   return 0;
 }
 
@@ -286,22 +178,19 @@ void tlb_invalidate(pde_t *pgdir, uintptr_t va) { tlb_out(PTE_ADDR(va)); }
 
 // pgdir_alloc_page - call alloc_page & page_insert functions to
 //                  - allocate a page size memory & setup an addr map
-//                  - pa<->la with linear address la and the PDT pgdir
-struct Page *pgdir_alloc_page(pde_t *pgdir, uintptr_t la, uint32_t perm) {
+//                  - pa<->va with linear address va and the PDT pgdir
+struct Page *pgdir_alloc_page(pde_t *pgdir, uintptr_t va, uint32_t perm) {
   struct Page *page = alloc_page();
   if (page != NULL) {
-    if (page_insert(pgdir, page, la, perm) != 0) {
+    if (page_insert(pgdir, page, va, perm) != 0) {
       free_page(page);
       return NULL;
     }
     if (swap_init_ok) {
       if (check_mm_struct != NULL) {
-        swap_map_swappable(check_mm_struct, la, page, 0);
-        page->pra_vaddr = la;
+        swap_map_swappable(check_mm_struct, va, page, 0);
+        page->pra_vaddr = va;
         assert(page_ref(page) == 1);
-        // cprintf("get No. %d  page: pra_vaddr %x, pra_link.prev %x,
-        // pra_link_next %x in pgdir_alloc_page\n", (page-pages),
-        // page->pra_vaddr,page->pra_page_link.prev, page->pra_page_link.next);
       }
     }
   }

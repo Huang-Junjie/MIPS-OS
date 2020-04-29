@@ -35,7 +35,7 @@ static struct Page *firstfit_alloc_pages(size_t n) {
   }
   struct Page *page = NULL;
   list_entry_t *le = &free_list;
-  // TODO: optimize (next-fit)
+
   while ((le = list_next(le)) != &free_list) {
     struct Page *p = le2page(le, page_link);
     if (p->property >= n) {
@@ -71,7 +71,7 @@ static void firstfit_free_pages(struct Page *base, size_t n) {
   while (le != &free_list) {
     p = le2page(le, page_link);
     le = list_next(le);
-    // TODO: optimize
+
     if (base + base->property == p) {
       base->property += p->property;
       ClearPageProperty(p);
@@ -148,9 +148,7 @@ static void basic_check(void) {
   free_page(p2);
 }
 
-// LAB2: below code is used to check the first fit allocation algorithm (your
-// EXERCISE 1) NOTICE: You SHOULD NOT CHANGE basic_check, firstfit_check
-// functions!
+
 static void firstfit_check(void) {
   int count = 0, total = 0;
   list_entry_t *le = &free_list;

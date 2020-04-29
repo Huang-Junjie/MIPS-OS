@@ -6,13 +6,6 @@
 #include <pmm.h>
 #include <vmm.h>
 
-/* *
- * swap_entry_t
- * --------------------------------------------
- * |         offset        |   reserved   | 0 |
- * --------------------------------------------
- *           24 bits            7 bits    1 bit
- * */
 
 
 #define max_swap_offset (128 * 2^20 / PGSIZE)
@@ -29,25 +22,18 @@
                __offset;                                            \
           })
 
-struct swap_manager
-{
-     const char *name;
-     /* Global initialization for the swap manager */
-     int (*init)            (void);
-     /* Initialize the priv data inside mm_struct */
-     int (*init_mm)         (struct mm_struct *mm);
-     /* Called when tick interrupt occured */
-     int (*tick_event)      (struct mm_struct *mm);
-     /* Called when map a swappable page into the mm_struct */
-     int (*map_swappable)   (struct mm_struct *mm, uintptr_t addr, struct Page *page, int swap_in);
-     /* When a page is marked as shared, this routine is called to
-      * delete the addr entry from the swap manager */
-     int (*set_unswappable) (struct mm_struct *mm, uintptr_t addr);
-     /* Try to swap out a page, return then victim */
-     int (*swap_out_victim) (struct mm_struct *mm, struct Page **ptr_page, int in_tick);
-     /* check the page relpacement algorithm */
-     int (*check_swap)(void);
+struct swap_manager  
+{  
+    const char *name;  
+    int (*init) (void);  //初始化页替换管理器
+    int (*init_mm) (struct mm_struct *mm); //初始化mm中页替换管理器的数据
+    int (*tick_event) (struct mm_struct *mm); //当时钟中断发生时被调用 
+    int (*map_swappable) (struct mm_struct *mm, uintptr_t addr, struct Page *page, int swap_in);   //将物理页设为可替换
+    int (*set_unswappable) (struct mm_struct *mm, uintptr_t addr); //将物理页设为不可替换 
+    int (*swap_out_victim) (struct mm_struct *mm, struct Page *ptr_page, int in_tick);  //选择要换出的页
+    int (*check_swap)(void);   //检查页替换算法
 };
+
 
 extern volatile int swap_init_ok;
 int swap_init(void);
@@ -58,7 +44,5 @@ int swap_set_unswappable(struct mm_struct *mm, uintptr_t addr);
 int swap_out(struct mm_struct *mm, int n, int in_tick);
 int swap_in(struct mm_struct *mm, uintptr_t addr, struct Page **ptr_result);
 
-//#define MEMBER_OFFSET(m,t) ((int)(&((t *)0)->m))
-//#define FROM_MEMBER(m,t,a) ((t *)((char *)(a) - MEMBER_OFFSET(m,t)))
 
 #endif /* _SWAP_H_ */

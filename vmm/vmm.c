@@ -6,32 +6,6 @@
 #include <swap.h>
 #include <vmm.h>
 
-/*
-  vmm design include two parts: mm_struct (mm) & vma_struct (vma)
-  mm is the memory manager for the set of continuous virtual memory
-  area which have the same PDT. vma is a continuous virtual memory area.
-  There a linear link list for vma & a redblack link list for vma in mm.
----------------
-  mm related functions:
-   golbal functions
-     struct mm_struct * mm_create(void)
-     void mm_destroy(struct mm_struct *mm)
-     int do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr)
---------------
-  vma related functions:
-   global functions
-     struct vma_struct * vma_create (uintptr_t vm_start, uintptr_t vm_end,...)
-     void insert_vma_struct(struct mm_struct *mm, struct vma_struct *vma)
-     struct vma_struct * find_vma(struct mm_struct *mm, uintptr_t addr)
-   local functions
-     inline void check_vma_overlap(struct vma_struct *prev, struct vma_struct
-*next)
----------------
-   check correctness functions
-     void check_vmm(void);
-     void check_vma_struct(void);
-     void check_pgfault(void);
-*/
 
 static void check_vmm(void);
 static void check_vma_struct(void);

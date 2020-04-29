@@ -7,18 +7,23 @@
 #include <printf.h>
 
 struct Page {
-    int ref;                        // page frame's reference counter
-    uint32_t flags;                 // array of flags that describe the status of the page frame
-    unsigned int property;          // used in buddy system, stores the order (the X in 2^X) of the continuous memory block
-    list_entry_t page_link;         // free list link
+    int ref;                        //物理页引用次数
+    uint32_t flags;                 //物理页状态
+    unsigned int property;          //从此页开始的连续空闲物理页个数
+    list_entry_t page_link;         //链接空闲物理页的链表节点
     list_entry_t pra_page_link;     // used for pra (page replace algorithm)
     uintptr_t pra_vaddr;            // used for pra (page replace algorithm)
 };
 
-/* Flags describing the status of a page frame */
-#define PG_reserved                 0       // the page descriptor is reserved for kernel or unusable
-#define PG_property                 1       // the member 'property' is valid
+typedef struct {
+    list_entry_t free_list;         // 空闲块链表头节点
+    unsigned int nr_free;           // 空闲块链表空闲页的数量
+} free_area_t;
 
+
+/* Page flag bit */
+#define PG_reserved                 0       // 物理页是否保留
+#define PG_property                 1       // 物理页是否空闲
 #define SetPageReserved(page)       ((page)->flags |= 0x1)
 #define ClearPageReserved(page)     ((page)->flags &= ~0x1)
 #define PageReserved(page)          ((page)->flags & 0x1)
@@ -30,24 +35,18 @@ struct Page {
 #define le2page(le, member)                 \
     to_struct((le), struct Page, member)
 
-/* free_area_t - maintains a doubly linked list to record free (unused) pages */
-typedef struct {
-    list_entry_t free_list;         // the list header
-    unsigned int nr_free;           // # of free pages in this free list
-} free_area_t;
 
 
 struct pmm_manager {
-    const char *name;                                 // XXX_pmm_manager's name
-    void (*init)(void);                               // initialize internal description&management data structure
-                                                      // (free block list, number of free block) of XXX_pmm_manager
-    void (*init_memmap)(struct Page *base, size_t n); // setup description&management data structcure according to
-                                                      // the initial free physical memory space
-    struct Page *(*alloc_pages)(size_t n);            // allocate >=n pages, depend on the allocation algorithm
-    void (*free_pages)(struct Page *base, size_t n);  // free >=n pages with "base" addr of Page descriptor structures(memlayout.h)
-    size_t (*nr_free_pages)(void);                    // return the number of free pages
-    void (*check)(void);                              // check the correctness of XXX_pmm_manager
+    const char *name; //物理内存页管理器的名字
+    void (*init)(void); //初始化内存管理器数据结构
+    void (*init_memmap)(struct Page *base, size_t n); //根据空闲内存空间建立数据结构
+    struct Page *(*alloc_pages)(size_t n); //分配n个连续物理内存页
+    void (*free_pages)(struct Page *base, size_t n); //释放n个连续物理内存页
+    size_t (*nr_free_pages)(void); //返回当前剩余的空闲页数
+    void (*check)(void); //检测分配/释放实现是否正确
 };
+
 
 
 extern struct Page *pages;
@@ -119,13 +118,11 @@ page_ref_dec(struct Page *page) {
 
 
 
-
-
 extern const struct pmm_manager *pmm_manager;
 extern pde_t *boot_pgdir;
+extern void tlb_out(uintptr_t entryhi);
 
 void pmm_init(void);
-
 struct Page *alloc_pages(size_t n);
 void free_pages(struct Page *base, size_t n);
 size_t nr_free_pages(void);
@@ -133,14 +130,13 @@ size_t nr_free_pages(void);
 #define alloc_page() alloc_pages(1)
 #define free_page(page) free_pages(page, 1)
 
-pte_t *get_pte(pde_t *pgdir, uintptr_t la, bool create);
-struct Page *get_page(pde_t *pgdir, uintptr_t la, pte_t **ptep_store);
-void page_remove(pde_t *pgdir, uintptr_t la);
-int page_insert(pde_t *pgdir, struct Page *page, uintptr_t la, uint32_t perm);
 
-extern void tlb_out(uintptr_t entryhi);
+pte_t *get_pte(pde_t *pgdir, uintptr_t va, bool create);
+struct Page *get_page(pde_t *pgdir, uintptr_t va, pte_t **ptep_store);
+void page_remove(pde_t *pgdir, uintptr_t la);
+int page_insert(pde_t *pgdir, struct Page *page, uintptr_t va, uint32_t perm);
 void tlb_invalidate(pde_t *pgdir, uintptr_t la);
-struct Page *pgdir_alloc_page(pde_t *pgdir, uintptr_t la, uint32_t perm);
+struct Page *pgdir_alloc_page(pde_t *pgdir, uintptr_t va, uint32_t perm);
 
 void unmap_range(pde_t *pgdir, uintptr_t start, uintptr_t end);
 void exit_range(pde_t *pgdir, uintptr_t start, uintptr_t end);
