@@ -384,7 +384,7 @@ int do_pgfault(struct mm_struct *mm, uint32_t cause, uintptr_t addr) {
     printf("do pgfault: ptep %x, pte %x\n", ptep, *ptep);
 
     if (*ptep & PTE_V) {
-      panic("write a non-writable addr: 0x%08x", addr);
+      *ptep |= PTE_D;
     } else {
       // if this pte is a swap entry, then load data from disk to a page with
       // phy addr and call page_insert to map the phy addr with logical addr

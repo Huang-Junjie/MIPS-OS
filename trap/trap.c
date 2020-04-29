@@ -44,7 +44,8 @@ static void handle_tlb(struct trapframe *tf) {
   }
 }
 
-static void syscall(struct trapframe *tf) {
+static void handle_syscall(struct trapframe *tf) {
+  tf->cp0_epc += 4;  //返回syscall下条指令
   int num = tf->regs[8];
   int ret = 0;
   switch (num) {
@@ -81,9 +82,8 @@ static void trap_dispatch(struct trapframe *tf) {
     case 3:  // TLBS
       handle_tlb(tf);
       break;
-    case 8:              // Syscall
-      tf->cp0_epc += 4;  //返回syscall下条指令
-      syscall(tf);
+    case 8:  // Syscall
+      handle_syscall(tf);
   }
 }
 
