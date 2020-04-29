@@ -49,9 +49,8 @@ void free_pages(struct Page *base, size_t n) {
   pmm_manager->free_pages(base, n);
 }
 
-// 获得剩余空闲页个数 
+// 获得剩余空闲页个数
 size_t nr_free_pages(void) { return pmm_manager->nr_free_pages(); }
-
 
 static void page_init(void) {
   extern char end[];
@@ -73,8 +72,6 @@ static void page_init(void) {
   init_memmap(pa2page(freemem), (maxpa - freemem) / PGSIZE);
 }
 
-
-
 void pmm_init(void) {
   init_pmm_manager();
   page_init();
@@ -88,13 +85,8 @@ void pmm_init(void) {
   print_pgdir();
 }
 
-// get_pte - get pte and return the kernel virtual address of this pte for va
-//        - if the PT contians this pte didn't exist, alloc a page for PT
-// parameter:
-//  pgdir:  the kernel virtual base address of PDT
-//  va:     the linear address need to map
-//  create: a logical value to decide if alloc a page for PT
-// return vaule: the kernel virtual address of this pte
+/* 根据虚拟地址va，从页目录中找到对应的页表，再从页表中找到对应的页表项，返回页表项内核虚拟地址。
+如果在页目录发现对应的页表不存在，根据create参数决定是否创建页表并返回页表对应的页表项。*/
 pte_t *get_pte(pde_t *pgdir, uintptr_t va, bool create) {
   pde_t *pdep = &pgdir[PDX(va)];
   if (!(*pdep & PTE_V)) {
@@ -122,37 +114,23 @@ struct Page *get_page(pde_t *pgdir, uintptr_t va, pte_t **ptep_store) {
   return NULL;
 }
 
-// page_remove_pte - free an Page sturct which is revated linear address va
-//                - and clean(invalidate) pte which is revated linear address va
-// note: PT is changed, so the TLB need to be invalidate
-static inline void page_remove_pte(pde_t *pgdir, uintptr_t va, pte_t *ptep) {
-  if (*ptep & PTE_V) {
-    struct Page *page = pte2page(*ptep);
-    if (page_ref_dec(page) == 0) {
-      free_page(page);
-    }
-    *ptep = 0;
-    tlb_invalidate(pgdir, va);
-  }
-}
-
-// page_remove - free an Page which is revated linear address va and has an
-// validated pte
+/* 取消虚拟地址va对应的虚拟页和它目前映射的物理页之间的映射关系，并清除虚拟地址va的对应的TLB表项
+ */
 void page_remove(pde_t *pgdir, uintptr_t va) {
   pte_t *ptep = get_pte(pgdir, va, 0);
   if (ptep != NULL) {
-    page_remove_pte(pgdir, va, ptep);
+    if (*ptep & PTE_V) {
+      struct Page *page = pte2page(*ptep);
+      if (page_ref_dec(page) == 0) {
+        free_page(page);
+      }
+      *ptep = 0;
+      tlb_invalidate(pgdir, va);
+    }
   }
 }
 
-// page_insert - build the map of phy addr of an Page with the linear addr va
-// paramemters:
-//  pgdir: the kernel virtual base address of PDT
-//  page:  the Page which need to map
-//  va:    the linear address need to map
-//  perm:  the permission of this Page which is setted in revated pte
-// return value: always 0
-// note: PT is changed, so the TLB need to be invalidate
+/* 将虚拟地址va对应的虚拟页与page变量对应的物理页建立映射 */
 int page_insert(pde_t *pgdir, struct Page *page, uintptr_t va, uint32_t perm) {
   pte_t *ptep = get_pte(pgdir, va, 1);
   if (ptep == NULL) {
@@ -172,13 +150,11 @@ int page_insert(pde_t *pgdir, struct Page *page, uintptr_t va, uint32_t perm) {
   return 0;
 }
 
-// invalidate a TLB entry, but only if the page tables being
-// edited are the ones currently in use by the processor.
+/* 清除虚拟地址va对应的TLB表项 */
 void tlb_invalidate(pde_t *pgdir, uintptr_t va) { tlb_out(PTE_ADDR(va)); }
 
-// pgdir_alloc_page - call alloc_page & page_insert functions to
-//                  - allocate a page size memory & setup an addr map
-//                  - pa<->va with linear address va and the PDT pgdir
+
+/* 调用alloc_page和page_insert函数为虚拟地址va分配一个物理页并建立映射关系 */
 struct Page *pgdir_alloc_page(pde_t *pgdir, uintptr_t va, uint32_t perm) {
   struct Page *page = alloc_page();
   if (page != NULL) {
@@ -393,7 +369,7 @@ static int get_pgtable_items(size_t left, size_t right, size_t start,
   return 0;
 }
 
-// print_pgdir - print the PDT&PT
+ /* 按层级打印当前进程的页目录和页表 */
 void print_pgdir(void) {
   printf("-------------------- BEGIN --------------------\n");
   size_t left, right = 0, perm;
