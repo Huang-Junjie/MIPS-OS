@@ -114,19 +114,23 @@ struct Page *get_page(pde_t *pgdir, uintptr_t va, pte_t **ptep_store) {
   return NULL;
 }
 
+static inline void page_remove_pte(pde_t *pgdir, uintptr_t va, pte_t *ptep) {
+  if (*ptep & PTE_V) {
+    struct Page *page = pte2page(*ptep);
+    if (page_ref_dec(page) == 0) {
+      free_page(page);
+    }
+    *ptep = 0;
+    tlb_invalidate(pgdir, va);
+  }
+}
+
 /* 取消虚拟地址va对应的虚拟页和它目前映射的物理页之间的映射关系，并清除虚拟地址va的对应的TLB表项
  */
 void page_remove(pde_t *pgdir, uintptr_t va) {
   pte_t *ptep = get_pte(pgdir, va, 0);
   if (ptep != NULL) {
-    if (*ptep & PTE_V) {
-      struct Page *page = pte2page(*ptep);
-      if (page_ref_dec(page) == 0) {
-        free_page(page);
-      }
-      *ptep = 0;
-      tlb_invalidate(pgdir, va);
-    }
+    page_remove_pte(pgdir, va, ptep);
   }
 }
 
@@ -152,7 +156,6 @@ int page_insert(pde_t *pgdir, struct Page *page, uintptr_t va, uint32_t perm) {
 
 /* 清除虚拟地址va对应的TLB表项 */
 void tlb_invalidate(pde_t *pgdir, uintptr_t va) { tlb_out(PTE_ADDR(va)); }
-
 
 /* 调用alloc_page和page_insert函数为虚拟地址va分配一个物理页并建立映射关系 */
 struct Page *pgdir_alloc_page(pde_t *pgdir, uintptr_t va, uint32_t perm) {
@@ -369,7 +372,7 @@ static int get_pgtable_items(size_t left, size_t right, size_t start,
   return 0;
 }
 
- /* 按层级打印当前进程的页目录和页表 */
+/* 按层级打印当前进程的页目录和页表 */
 void print_pgdir(void) {
   printf("-------------------- BEGIN --------------------\n");
   size_t left, right = 0, perm;
