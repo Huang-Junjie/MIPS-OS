@@ -5,16 +5,15 @@
 #include <trap.h>
 #include <types.h>
 
-// pre define
+
 struct mm_struct;
 
-// the virtual continuous memory area(vma)
 struct vma_struct {
-  struct mm_struct *vm_mm;  // the set of vma using the same PDT
-  uintptr_t vm_start;       //    start addr of vma
-  uintptr_t vm_end;         // end addr of vma
-  uint32_t vm_flags;        // flags of vma
-  list_entry_t list_link;  // linear list link which sorted by start addr of vma
+    struct mm_struct *vm_mm; //同一进程的vma指向该进程的mm
+    uintptr_t vm_start; //vma的起始地址
+    uintptr_t vm_end;  // vma的结束地址
+    uint32_t vm_flags; // 此vma表示的虚拟内存空间的属性
+    list_entry_t list_link;  // 链接其他vma
 };
 
 #define le2vma(le, member) to_struct((le), struct vma_struct, member)
@@ -23,15 +22,13 @@ struct vma_struct {
 #define VM_WRITE 0x00000002
 #define VM_EXEC 0x00000004
 
-// the control struct for a set of vma using the same PDT
 struct mm_struct {
-  list_entry_t mmap_list;  // linear list link which sorted by start addr of vma
-  struct vma_struct
-      *mmap_cache;  // current accessed vma, used for speed purpose
-  pde_t *pgdir;     // the PDT of these vma
-  int map_count;    // the count of these vma
-  int mm_count;                  // the number ofprocess which shared the mm
-  void *sm_priv;    // the private data for swap manager
+    list_entry_t mmap_list;// 链接vma
+    struct vma_struct *mmap_cache;// 当前访问的vma，用于加速vma查询 
+    pde_t *pgdir; //  vma的页目录
+    int map_count; // vma的数量
+    int mm_count;   // mm共享计数
+    void *sm_priv; // 用于页替换管理器的私有数据
 };
 
 struct vma_struct *find_vma(struct mm_struct *mm, uintptr_t addr);
