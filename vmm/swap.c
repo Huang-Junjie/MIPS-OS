@@ -162,7 +162,7 @@ static void check_swap(void) {
     count++, total += p->property;
   }
   assert(total == nr_free_pages());
-  printf("BEGIN check_swap: count %d, total %d\n", count, total);
+  // printf("BEGIN check_swap: count %d, total %d\n", count, total);
 
   // now we set the phy pages env
   struct mm_struct *mm = mm_create();
@@ -183,11 +183,11 @@ static void check_swap(void) {
   insert_vma_struct(mm, vma);
 
   // setup the temp Page Table vaddr 0~4MB
-  printf("setup Page Table for vaddr 0X1000, so alloc a page\n");
+  // printf("setup Page Table for vaddr 0X1000, so alloc a page\n");
   pte_t *temp_ptep = NULL;
   temp_ptep = get_pte(mm->pgdir, BEING_CHECK_VALID_VADDR, 1);
   assert(temp_ptep != NULL);
-  printf("setup Page Table vaddr 0~4MB OVER!\n");
+  // printf("setup Page Table vaddr 0~4MB OVER!\n");
 
   for (i = 0; i < CHECK_VALID_PHY_PAGE_NUM; i++) {
     check_rp[i] = alloc_page();
@@ -251,7 +251,7 @@ static void check_swap(void) {
     struct Page *p = le2page(le, page_link);
     count--, total -= p->property;
   }
-  printf("count is %d, total is %d\n", count, total);
+  // printf("count is %d, total is %d\n", count, total);
   // assert(count == 0);
 
   printf("check_swap() succeeded!\n");
