@@ -15,6 +15,7 @@
         "sysnum.h": "c",
         "kmalloc.h": "c",
         "mmu.h": "c",
-        "sem.h": "c"
+        "sem.h": "c",
+        "sched.h": "c"
     }
 }
