@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sysnum.h>
 #include <vmm.h>
+#include <sync.h>
 
 static struct proc_struct *procs = NULL;  // 所有的进程控制块
 struct proc_struct *current = NULL;
