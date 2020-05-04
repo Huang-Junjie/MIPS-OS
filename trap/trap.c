@@ -1,6 +1,7 @@
 #include <pmm.h>
 #include <printf.h>
 #include <proc.h>
+#include <sched.h>
 #include <sysnum.h>
 #include <trap.h>
 #include <vmm.h>

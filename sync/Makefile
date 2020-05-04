@@ -1,6 +1,6 @@
 include ../tools/include.mk
 
-INCLUDE := -I../include/ -I../lib/ -I../trap/ -I../process/ -I../pmm/ -I../vmm/ -I../sync/
+INCLUDE := -I../include/ -I../lib/ -I../trap/ -I../process/ -I../pmm/ -I../vmm/ -I../sync/ -I../schedule/
 
 
 %.o: %.c

@@ -2,6 +2,7 @@
 #include <sem.h>
 #include <sync.h>
 #include <printf.h>
+#include <sched.h>
 
 void sem_init(semaphore_t *sem, int value) {
   sem->value = value;

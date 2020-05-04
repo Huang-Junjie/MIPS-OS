@@ -16,6 +16,8 @@
         "kmalloc.h": "c",
         "mmu.h": "c",
         "sem.h": "c",
-        "sched.h": "c"
+        "sched.h": "c",
+        "list.h": "c",
+        "sync.h": "c"
     }
 }
