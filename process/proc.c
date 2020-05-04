@@ -142,7 +142,7 @@ int kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags) {
   tf.regs[8] = (uint32_t)fn;
   tf.regs[9] = (uint32_t)arg;
   tf.cp0_epc = (uint32_t)kernel_thread_entry;
-  tf.cp0_status = 0x1001;
+  tf.cp0_status = 0x1003;
   return do_fork(clone_flags | CLONE_VM, &tf);
 }
 

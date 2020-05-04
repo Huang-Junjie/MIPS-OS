@@ -43,6 +43,9 @@ LEAF(switch_to)
     mflo    t0
     sw      t0, (TF_REG31+8)(a0)
 
+    mfc0    t0, CP0_STATUS
+    sw      t0, (TF_REG31+12)(a0)
+
     # restore to's registers
     lw      t0, (TF_REG31+4)(a1)
     mthi    t0
@@ -80,6 +83,8 @@ LEAF(switch_to)
     lw  $30,TF_REG30(a1)
     lw  $31,TF_REG31(a1)
     lw  $5,TF_REG5(a1)
+    mtc0    t0, CP0_STATUS
+    lw      t0, (TF_REG31+12)(a0)
     jr  ra
 END(switch_to)
 

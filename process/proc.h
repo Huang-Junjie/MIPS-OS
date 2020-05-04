@@ -19,6 +19,7 @@ struct context {
     uint32_t regs[32];
     uint32_t hi;
     uint32_t lo;
+    uint32_t cp0_status;
 };
 
 struct proc_struct {
