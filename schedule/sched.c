@@ -49,41 +49,43 @@ void sched_init(void) {
 
 void wakeup_proc(struct proc_struct *proc) {
   assert(proc->state != PROC_ZOMBIE);
-  cli();
-
-  if (proc->state != PROC_RUNNABLE) {
-    proc->state = PROC_RUNNABLE;
-    proc->wait_state = 0;
-    if (proc != current) {
-      sched_class_enqueue(proc);
+  bool intr_flag;
+  local_intr_save(intr_flag);
+  {
+    if (proc->state != PROC_RUNNABLE) {
+      proc->state = PROC_RUNNABLE;
+      proc->wait_state = 0;
+      if (proc != current) {
+        sched_class_enqueue(proc);
+      }
+    } else {
+      printf("wakeup runnable process.\n");
     }
-  } else {
-    printf("wakeup runnable process.\n");
   }
-
-  sti();
+  local_intr_restore(intr_flag);
 }
 
 void schedule(void) {
+  bool intr_flag;
   struct proc_struct *next;
-  cli();
-
-  current->need_resched = 0;
-  if (current->state == PROC_RUNNABLE) {
-    sched_class_enqueue(current);
+  local_intr_save(intr_flag);
+  {
+    current->need_resched = 0;
+    if (current->state == PROC_RUNNABLE) {
+      sched_class_enqueue(current);
+    }
+    if ((next = sched_class_pick_next()) != NULL) {
+      sched_class_dequeue(next);
+    }
+    if (next == NULL) {
+      next = idleproc;
+    }
+    next->runs++;
+    if (next != current) {
+      proc_run(next);
+    }
   }
-  if ((next = sched_class_pick_next()) != NULL) {
-    sched_class_dequeue(next);
-  }
-  if (next == NULL) {
-    next = idleproc;
-  }
-  next->runs++;
-  if (next != current) {
-    proc_run(next);
-  }
-
-  sti();
+  local_intr_restore(intr_flag);
 }
 
 // void
