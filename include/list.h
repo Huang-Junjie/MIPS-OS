@@ -13,6 +13,7 @@ static inline void list_init(list_entry_t *elm) __attribute__((always_inline));
 static inline void list_add_before(list_entry_t *listelm, list_entry_t *elm) __attribute__((always_inline));
 static inline void list_add_after(list_entry_t *listelm, list_entry_t *elm) __attribute__((always_inline));
 static inline void list_del(list_entry_t *listelm) __attribute__((always_inline));
+static inline void list_del_init(list_entry_t *listelm) __attribute__((always_inline));
 static inline bool list_empty(list_entry_t *list) __attribute__((always_inline));
 static inline list_entry_t *list_next(list_entry_t *listelm) __attribute__((always_inline));
 static inline list_entry_t *list_prev(list_entry_t *listelm) __attribute__((always_inline));
@@ -44,6 +45,12 @@ static inline void
 list_del(list_entry_t *listelm) {
     listelm->prev->next = listelm->next;
     listelm->next->prev = listelm->prev;
+}
+
+static inline void
+list_del_init(list_entry_t *listelm) {
+    list_del(listelm);
+    list_init(listelm);
 }
 
 static inline bool
