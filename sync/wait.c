@@ -1,5 +1,6 @@
 #include <wait.h>
 #include <sched.h>
+#include <printf.h>
 
 void wait_init(wait_t *wait, struct proc_struct *proc) {
   wait->proc = proc;

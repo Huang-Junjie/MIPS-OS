@@ -1,6 +1,7 @@
 #include <proc.h>
 #include <sem.h>
 #include <sync.h>
+#include <printf.h>
 
 void sem_init(semaphore_t *sem, int value) {
   sem->value = value;
