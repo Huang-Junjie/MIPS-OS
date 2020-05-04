@@ -62,7 +62,7 @@ static void handle_syscall(struct trapframe *tf) {
       ret = do_execve(tf->regs[9], tf->regs[10]);
       break;
     case SYS_sleep:
-      //
+      ret = do_sleep(tf->regs[9]);
       break;
     case SYS_putc:
       printf("%c", tf->regs[9]);

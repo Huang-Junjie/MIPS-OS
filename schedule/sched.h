@@ -59,9 +59,9 @@ struct run_queue {
 void sched_init(void);
 void wakeup_proc(struct proc_struct *proc);
 void schedule(void);
-// void add_timer(timer_t *timer);
-// void del_timer(timer_t *timer);
-// void run_timer_list(void);
+void add_timer(timer_t *timer);
+void del_timer(timer_t *timer);
+void run_timer_list(void);
 
 #endif /* _SCHED_H_ */
 

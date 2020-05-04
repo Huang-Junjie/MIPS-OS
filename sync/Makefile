@@ -11,7 +11,7 @@ INCLUDE := -I../include/ -I../lib/ -I../trap/ -I../process/ -I../pmm/ -I../vmm/ 
 
 .PHONY: all clean
 
-all: sync_asm.o wait.o sem.o
+all: sync_asm.o wait.o sem.o check_sync.o
 
 clean:
 	rm -rf *.o

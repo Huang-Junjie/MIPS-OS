@@ -69,19 +69,7 @@ void cpu_idle(void);
 int do_exit(int error_code);
 int do_wait(int pid, int *code_store);
 int do_execve(unsigned char *binary, size_t size);
-
-// int proc_alloc(struct proc_struct **proc_p, uint32_t parent_pid);
-// void proc_free(struct proc_struct *);
-// void proc_create(u_char *binary, int size);
-// void proc_destroy(struct proc_struct *proc);
-// void proc_run(struct proc_struct *proc);
-
-// struct proc_struct * pid2proc(uint32_t pid, struct proc_struct *proc, int checkperm);
-
-
-// int kernel_thread(int (*fn)(void *), void *arg);
-// void cpu_idle(void) __attribute__((noreturn));
-
+int do_sleep(unsigned int time);
 
 
 

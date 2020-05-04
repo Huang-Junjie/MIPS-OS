@@ -3,6 +3,7 @@
 #include <pmm.h>
 #include <printf.h>
 #include <proc.h>
+#include <sched.h>
 #include <string.h>
 #include <sysnum.h>
 #include <vmm.h>
@@ -403,8 +404,8 @@ static int init_main(void *arg) {
   if (pid <= 0) {
     panic("create user_main failed.\n");
   }
-  // extern void check_sync(void);
-  // check_sync();  // check philosopher sync problem
+  extern void check_sync(void);
+  check_sync();
 
   while (do_wait(0, NULL) == 0) {
     schedule();
@@ -445,4 +446,22 @@ void proc_init(void) {
   initproc = find_proc(pid);
   assert(idleproc != NULL && PROCX(idleproc->pid) == 0);
   assert(initproc != NULL && PROCX(initproc->pid) == 1);
+}
+
+int do_sleep(unsigned int time) {
+  if (time == 0) {
+    return 0;
+  }
+  bool intr_flag;
+  local_intr_save(intr_flag);
+  timer_t __timer, *timer = timer_init(&__timer, current, time);
+  current->state = PROC_SLEEPING;
+  current->wait_state = WT_TIMER;
+  add_timer(timer);
+  local_intr_restore(intr_flag);
+
+  schedule();
+
+  del_timer(timer);
+  return 0;
 }
