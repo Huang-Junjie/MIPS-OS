@@ -6,23 +6,27 @@
 #include <trap.h>
 #include <vmm.h>
 
-static void print_ticks() {
-  static int ticks = 0;
-  ticks++;
-  if (ticks % 100 == 0) {
-    printf("%d ticks\n", ticks);
-  }
-}
+// static void print_ticks() {
+//   static int ticks = 0;
+//   ticks++;
+//   if (ticks % 100 == 0) {
+//     printf("%d ticks\n", ticks);
+//   }
+// }
+
+// static void print_tf(struct trapframe *tf)  {
+//     printf("Enter print_tf\n");
+//     printf("CP0_STATUS value:  \t0x%08x\n", tf->cp0_status);
+//     printf("CP0_CAUSE value:   \t0x%08x\n", tf->cp0_cause);
+//     printf("CP0_EPC value:     \t0x%08x\n", tf->cp0_epc);
+//     printf("CP0_BADVADDR value:\t0x%08x\n", tf->cp0_badvaddr);
+// }
 
 static void handle_int(struct trapframe *tf) {
   /* 判断是否是时钟中断 */
   if (tf->cp0_cause & tf->cp0_status & 0x1000) {
     *(char *)0xb5000110 = 1;  //响应时钟中断
-    print_ticks();
-  }
-  // delete
-  else {
-    print_ticks("else int");
+    run_timer_list();
   }
 }
 
@@ -87,14 +91,6 @@ static void trap_dispatch(struct trapframe *tf) {
       handle_syscall(tf);
   }
 }
-
-// static void print_tf(struct trapframe *tf)  {
-//     printf("Enter print_tf\n");
-//     printf("CP0_STATUS value:  \t0x%08x\n", tf->cp0_status);
-//     printf("CP0_CAUSE value:   \t0x%08x\n", tf->cp0_cause);
-//     printf("CP0_EPC value:     \t0x%08x\n", tf->cp0_epc);
-//     printf("CP0_BADVADDR value:\t0x%08x\n", tf->cp0_badvaddr);
-// }
 
 void trap(struct trapframe *tf) {
   if (current == NULL) {
