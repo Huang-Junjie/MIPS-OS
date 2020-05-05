@@ -7,7 +7,6 @@
 #include <trap.h>
 
 .macro SAVE_ALL
-.set noat
 .extern current
     move    k0, sp
     mfc0    k1, CP0_STATUS
@@ -68,13 +67,11 @@ save_start:
     sw      k0, TF_EPC(sp)
     mfc0    k0, CP0_BADVADDR
     sw      k0, TF_BADVADDR(sp)
-.set at
 .endm
 
 
 
 .macro RESTORE_ALL
-.set noat
     lw      k0, TF_EPC(sp)
     mtc0    k0, CP0_EPC
     lw      k0, TF_STATUS(sp)
@@ -114,7 +111,6 @@ save_start:
     lw      $2, TF_REG2(sp)
     lw      $1, TF_REG1(sp)
     lw      sp, TF_REG29(sp)
-.set at
 .endm
 
 
