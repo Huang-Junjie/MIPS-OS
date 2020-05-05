@@ -10,15 +10,15 @@ LEAF(tlb_set)
     tlbr
     j       clear_lo_b
 clear_lo:
-    mtc0    zero,CP0_ENTRYLO0
-    mtc0    zero,CP0_ENTRYLO1
+    mtc0    zero, CP0_ENTRYLO0
+    mtc0    zero, CP0_ENTRYLO1
 clear_lo_b:
     andi    a0, 0x00001000
     beqz    a0, set_lo0
-    mtc0    a1,CP0_ENTRYLO1
+    mtc0    a1, CP0_ENTRYLO1
     j       set_lo0_b
 set_lo0:
-    mtc0    a1,CP0_ENTRYLO0
+    mtc0    a1, CP0_ENTRYLO0
 set_lo0_b:
     bltz    t0, random_write
     tlbwi

@@ -98,6 +98,40 @@ LEAF(set_asid)
     jr      ra
 END(set_asid)
 
+
+LEAF(set_tlb)
+    mfc0    t0, CP0_ENTRYHI
+    and     t1, t0, 0xff
+    and     t2, a0, 0xffffefff
+    or      t1, t2
+    mtc0    t1, CP0_ENTRYHI
+    tlbp
+    mfc0    t3, CP0_INDEX
+    bltz    t3, clear_lo
+    tlbr
+    j       clear_lo_b
+clear_lo:
+    mtc0    zero,CP0_ENTRYLO0
+    mtc0    zero,CP0_ENTRYLO1
+clear_lo_b:
+    andi    a0, 0x00001000
+    beqz    a0, set_lo0
+    mtc0    a1, CP0_ENTRYLO1
+    j       set_lo0_b
+set_lo0:
+    mtc0    a1, CP0_ENTRYLO0
+set_lo0_b:
+    bltz    t3, random_write
+    tlbwi
+    j       random_write_b
+random_write:
+    tlbwr
+random_write_b:
+    mtc0    t0, CP0_ENTRYHI
+    jr      ra
+END(set_tlb)
+
+
 LEAF(syscall)
     move    t0, a0      //syscall number
     move    t1, a1      //arg1

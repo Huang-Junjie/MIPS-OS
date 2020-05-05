@@ -371,8 +371,7 @@ static int load_icode(unsigned char *binary, size_t size) {
   /* 给程序入口设置tlb */
   pte_t *ptep = get_pte(mm->pgdir, elf->e_entry, 0);
   if (ptep != NULL && *ptep & PTE_V) {
-    tlb_set(elf->e_entry, (*ptep) >> 6);
-    return;
+    set_tlb(PTE_ADDR(elf->e_entry), (*ptep) >> 6);
   }
   return 0;
 }
