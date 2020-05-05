@@ -121,7 +121,6 @@ int do_fork(uint32_t clone_flags, struct trapframe *tf) {
   }
   proc->context.regs[31] = (uintptr_t)forkret;
   proc->context.regs[29] = (uintptr_t)(proc->tf);
-  proc->context.cp0_status = 0x1003;
 
   //设置父子兄弟进程关系
   proc->parent = current;
