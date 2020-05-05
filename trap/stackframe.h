@@ -12,7 +12,12 @@
     move    k0, sp
     mfc0    k1, CP0_STATUS
     and     k1, 0x10   //获取UM
-    beqz    k1, save_start  //内核线程陷入时不切换栈
+    beqz    k1, save_start  //原来是内核态时不切换栈
+    /* 将当前状态记录为内核态 */
+    mfc0    k1, CP0_STATUS  
+    or      k1, 0x10
+    mtc0    k1, CP0_STATUS
+    /* 获取内核栈指针 */
     lw      sp, current	   
     add     sp, KSTACK_OFFSET	
     add     sp, KSTACK_SIZE

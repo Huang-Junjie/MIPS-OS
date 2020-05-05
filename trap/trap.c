@@ -89,6 +89,7 @@ static void trap_dispatch(struct trapframe *tf) {
       break;
     case 8:  // Syscall
       handle_syscall(tf);
+      break;
   }
 }
 

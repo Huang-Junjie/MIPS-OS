@@ -31,7 +31,7 @@ all: $(modules) $(kernel) $(user_bin)
 $(modules):
 	$(MAKE) --directory=$@ "DEFS+=-DUSERSTART=$(user_bin_name)_start -DUSERSIZE=$(user_bin_name)_size"
 
-$(user_bin):
+$(user_bin): $(user_objects)
 	$(LD) -nostdlib -T $(user_lds) -o $(user_bin) $(user_objects)
 
 $(kernel): $(modules) $(user_bin)
