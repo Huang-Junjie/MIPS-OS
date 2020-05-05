@@ -1,11 +1,19 @@
 #include <printf.h>
 
 int main() {
-    int pid = fork();
-    if (pid == 0) {
-        printf("user: child\n");
-    }else {
-        printf("user: parent\n");
+  int n, pid;
+  for (n = 0; n < 5; n++) {
+    if ((pid = fork()) == 0) {
+      printf("I am child %d\n", n);
     }
-    return 0;
+    assert(pid > 0);
+  }
+
+  for (; n > 0; n--) {
+    assert(wait() == 0);
+  }
+
+  assert(wait() != 0);
+  printf("I am parent %d\n", n);
+  return 0;
 }

@@ -417,7 +417,7 @@ static int init_main(void *arg) {
     schedule();
   }
 
-  printf("all user-mode processes have quit.\n");
+  printf("all processes have quit.\n");
   assert(initproc->cptr == NULL && initproc->yptr == NULL &&
          initproc->optr == NULL);
   assert(nr_process == 2);
