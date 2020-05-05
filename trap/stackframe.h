@@ -15,7 +15,7 @@
     beqz    k1, save_start  //原来是内核态时不切换栈
     /* 将当前状态记录为内核态 */
     mfc0    k1, CP0_STATUS  
-    or      k1, 0x10
+    and     k1, ~0x10
     mtc0    k1, CP0_STATUS
     /* 获取内核栈指针 */
     lw      sp, current	   

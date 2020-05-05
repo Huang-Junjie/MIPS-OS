@@ -5,9 +5,9 @@
 #include <proc.h>
 #include <sched.h>
 #include <string.h>
+#include <sync.h>
 #include <sysnum.h>
 #include <vmm.h>
-#include <sync.h>
 
 static struct proc_struct *procs = NULL;  // 所有的进程控制块
 struct proc_struct *current = NULL;
@@ -368,7 +368,12 @@ static int load_icode(unsigned char *binary, size_t size) {
   current->tf->cp0_status = 0x1013;
   current->tf->regs[29] = USTACKTOP;
   current->tf->cp0_epc = elf->e_entry;
-
+  /* 给程序入口设置tlb */
+  pte_t *ptep = get_pte(mm->pgdir, elf->e_entry, 0);
+  if (ptep != NULL && *ptep & PTE_V) {
+    tlb_set(elf->e_entry, (*ptep) >> 6);
+    return;
+  }
   return 0;
 }
 

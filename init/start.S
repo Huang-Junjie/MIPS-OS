@@ -13,12 +13,20 @@ _boot_pgdir:
 /* 操作系统入口*/
 .text
 LEAF(_start)
-    /* 关闭中断 */
-    mtc0    zero, CP0_STATUS
+    /* 初始化CP0 Status寄存器，关闭中断 */
+    mfc0    t0, CP0_STATUS
+    and     t0, 0x10000000
+    mtc0    t0, CP0_STATUS
 
     /* 关闭观测异常 */
     mtc0    zero, CP0_WATCHLO
     mtc0    zero, CP0_WATCHHI
+
+    /* 设置页大小为4k */
+    mtc0    zero, CP0_PAGEMASK
+
+    /* 设置当前ASID为0 */
+    mtc0    zero, CP0_ENTRYHI
 
 
     /* 设置栈指针 */
