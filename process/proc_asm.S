@@ -47,7 +47,7 @@ LEAF(switch_to)
     sw      t0, (TF_REG31+12)(a0)
 
     # restore to's registers
-    lw      t0, (TF_REG31+12)(a0)
+    lw      t0, (TF_REG31+12)(a1)
     mtc0    t0, CP0_STATUS
 
     lw      t0, (TF_REG31+4)(a1)
