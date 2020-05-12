@@ -1,11 +1,22 @@
 #include <printf.h>
+#include <ulib.h>
 
 int main() {
-    int pid = fork();
-    if (pid == 0) {
-        printf("user: child\n");
-    }else {
-        printf("user: parent\n");
+  int i, pid[5], ecode;
+  for (i = 0; i < 5; i++) {
+    if ((pid[i] = fork()) == 0) {
+      printf("I am child %d\n", i);
+      return i;
     }
-    return 0;
+  }
+
+  for (i = 0; i < 0; i++) {
+    waitpid(pid[i], &ecode);
+    assert(ecode == i);
+  }
+
+  assert(wait() != 0);
+
+  printf("I am parent\n");
+  return 0;
 }

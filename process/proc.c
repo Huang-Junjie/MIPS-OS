@@ -240,6 +240,7 @@ int do_wait(int pid, int *code_store) {
         *code_store = proc->exit_code;
       }
       //回收进程控制块
+      proc->state = PROC_FREE;
       list_add_before(&proc_free_list, &proc->free_list_link);
       //设置父进程和兄弟进程关系
       if (proc->optr != NULL) {

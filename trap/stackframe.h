@@ -13,8 +13,9 @@
     and     k1, 0x10   //获取UM
     beqz    k1, save_start  //原来是内核态时不切换栈
     /* 获取内核栈指针 */
-    lw      sp, current	   
-    add     sp, KSTACK_OFFSET	
+    lw      sp, current
+    add     sp, KSTACK_OFFSET
+    lw      sp, (sp)
     add     sp, KSTACK_SIZE
 
 save_start:

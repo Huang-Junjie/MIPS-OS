@@ -24,7 +24,7 @@ user_objects := user/*.o \
 user_bin	:= user/user_code.out
 user_bin_name   := _binary_user_user_code_out
 
-.PHONY: all $(modules) clean start debug
+.PHONY: all $(modules) $(user_bin) clean start debug
 
 all: $(kernel)
 
