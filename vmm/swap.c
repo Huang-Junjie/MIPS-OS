@@ -155,6 +155,10 @@ static void check_swap(void) {
   assert(vma != NULL);
   insert_vma_struct(mm, vma);
 
+  // 为0~4MB虚拟地址空间建立临时页表
+  pte_t *temp_ptep = get_pte(mm->pgdir, BEING_CHECK_VALID_VADDR, 1);
+  assert(temp_ptep != NULL);
+
   //建立指定数量物理页的内存环境
   for (i = 0; i < CHECK_VALID_PHY_PAGE_NUM; i++) {
     check_rp[i] = alloc_page();
