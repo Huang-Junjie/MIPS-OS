@@ -132,10 +132,9 @@ size_t nr_free_pages(void);
 
 
 pte_t *get_pte(pde_t *pgdir, uintptr_t va, bool create);
-struct Page *get_page(pde_t *pgdir, uintptr_t va, pte_t **ptep_store);
-void page_remove(pde_t *pgdir, uintptr_t la);
+void page_remove(pde_t *pgdir, uintptr_t va);
 int page_insert(pde_t *pgdir, struct Page *page, uintptr_t va, uint32_t perm);
-void tlb_invalidate(pde_t *pgdir, uintptr_t la);
+void tlb_invalidate(pde_t *pgdir, uintptr_t va);
 struct Page *pgdir_alloc_page(pde_t *pgdir, uintptr_t va, uint32_t perm);
 
 void unmap_range(pde_t *pgdir, uintptr_t start, uintptr_t end);

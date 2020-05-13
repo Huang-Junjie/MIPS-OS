@@ -7,29 +7,30 @@
 
 static list_entry_t timer_list;
 
-static struct sched_class *sched_class;
+static struct sched_class *sched;
 
 static struct run_queue *rq;
 
-static inline void sched_class_enqueue(struct proc_struct *proc) {
+static inline void sched_enqueue(struct proc_struct *proc) {
   if (proc != idleproc) {
-    sched_class->enqueue(rq, proc);
+    sched->enqueue(rq, proc);
   }
 }
 
-static inline void sched_class_dequeue(struct proc_struct *proc) {
-  sched_class->dequeue(rq, proc);
+static inline void sched_dequeue(struct proc_struct *proc) {
+  sched->dequeue(rq, proc);
 }
 
-static inline struct proc_struct *sched_class_pick_next(void) {
-  return sched_class->pick_next(rq);
+static inline struct proc_struct *sched_pick_next(void) {
+  return sched->pick_next(rq);
 }
 
-static void sched_class_proc_tick(struct proc_struct *proc) {
-  if (proc != idleproc) {
-    sched_class->proc_tick(rq, proc);
+
+static void scheduler_tick() {
+  if (current != idleproc) {
+    sched->proc_tick(rq, current);
   } else {
-    proc->need_resched = 1;
+    current->need_resched = 1;
   }
 }
 
@@ -38,13 +39,13 @@ static struct run_queue __rq;
 void sched_init(void) {
   list_init(&timer_list);
 
-  sched_class = &default_sched_class;
+  sched = &RR_sched;
 
   rq = &__rq;
   rq->max_time_slice = 5;
-  sched_class->init(rq);
+  sched->init(rq);
 
-  printf("sched class: %s\n", sched_class->name);
+  printf("sched class: %s\n", sched->name);
 }
 
 void wakeup_proc(struct proc_struct *proc) {
@@ -56,7 +57,7 @@ void wakeup_proc(struct proc_struct *proc) {
       proc->state = PROC_RUNNABLE;
       proc->wait_state = 0;
       if (proc != current) {
-        sched_class_enqueue(proc);
+        sched_enqueue(proc);
       }
     } else {
       printf("wakeup runnable process.\n");
@@ -72,10 +73,10 @@ void schedule(void) {
   {
     current->need_resched = 0;
     if (current->state == PROC_RUNNABLE) {
-      sched_class_enqueue(current);
+      sched_enqueue(current);
     }
-    if ((next = sched_class_pick_next()) != NULL) {
-      sched_class_dequeue(next);
+    if ((next = sched_pick_next()) != NULL) {
+      sched_dequeue(next);
     }
     if (next == NULL) {
       next = idleproc;
@@ -150,7 +151,7 @@ void run_timer_list(void) {
         timer = le2timer(le, timer_link);
       }
     }
-    sched_class_proc_tick(current);
+    scheduler_tick();
   }
   local_intr_restore(intr_flag);
 }

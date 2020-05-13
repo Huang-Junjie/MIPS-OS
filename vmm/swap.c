@@ -6,24 +6,18 @@
 #include <swap.h>
 #include <swap_fifo.h>
 
-// the valid vaddr for check is between 0~CHECK_VALID_VADDR-1
+// 页替换检查时的虚拟页数量
 #define CHECK_VALID_VIR_PAGE_NUM 5
 #define BEING_CHECK_VALID_VADDR 0X1000
 #define CHECK_VALID_VADDR (CHECK_VALID_VIR_PAGE_NUM + 1) * 0x1000
-// the max number of valid physical page for check
+// 页替换检查时的物理页数量
 #define CHECK_VALID_PHY_PAGE_NUM 4
-// the max access seq number
-#define MAX_SEQ_NO 10
 #define SWAP_DEV_NO 1
 #define PAGE_NSECT (PGSIZE / 512)
 
 static struct swap_manager *sm;
 
 volatile int swap_init_ok = 0;
-
-unsigned int swap_page[CHECK_VALID_VIR_PAGE_NUM];
-
-unsigned int swap_in_seq_no[MAX_SEQ_NO], swap_out_seq_no[MAX_SEQ_NO];
 
 static void check_swap(void);
 
@@ -69,17 +63,12 @@ int swap_out(struct mm_struct *mm, int n, int in_tick) {
   int i;
   for (i = 0; i != n; ++i) {
     uintptr_t v;
-    // struct Page **ptr_page=NULL;
     struct Page *page;
-    // printf("i %d, SWAP: call swap_out_victim\n",i);
     int r = sm->swap_out_victim(mm, &page, in_tick);
     if (r != 0) {
       printf("i %d, swap_out: call swap_out_victim failed\n", i);
       break;
     }
-    // assert(!PageReserved(page));
-
-    // printf("SWAP: choose victim page 0x%08x\n", page);
 
     v = page->pra_vaddr;
     pte_t *ptep = get_pte(mm->pgdir, v, 0);
@@ -106,8 +95,6 @@ int swap_in(struct mm_struct *mm, uintptr_t addr, struct Page **ptr_result) {
   assert(result != NULL);
 
   pte_t *ptep = get_pte(mm->pgdir, addr, 0);
-  // printf("SWAP: load ptep %x swap entry %d to vaddr 0x%08x, page %x, No
-  // %d\n", ptep, (*ptep)>>8, addr, result, (result-pages));
 
   int r;
   if ((r = swapfs_read((*ptep), result)) != 0) {
@@ -153,42 +140,22 @@ extern free_area_t free_area;
 #define nr_free (free_area.nr_free)
 
 static void check_swap(void) {
-  // backup mem env
-  int ret, count = 0, total = 0, i;
-  list_entry_t *le = &free_list;
-  while ((le = list_next(le)) != &free_list) {
-    struct Page *p = le2page(le, page_link);
-    assert(PageProperty(p));
-    count++, total += p->property;
-  }
-  assert(total == nr_free_pages());
-  // printf("BEGIN check_swap: count %d, total %d\n", count, total);
+  int ret, i;
 
-  // now we set the phy pages env
+  // 建立好mm和vma
   struct mm_struct *mm = mm_create();
   assert(mm != NULL);
-
   extern struct mm_struct *check_mm_struct;
   assert(check_mm_struct == NULL);
-
   check_mm_struct = mm;
-
   pde_t *pgdir = mm->pgdir = boot_pgdir;
   assert(pgdir[0] == 0);
-
   struct vma_struct *vma = vma_create(BEING_CHECK_VALID_VADDR,
                                       CHECK_VALID_VADDR, VM_WRITE | VM_READ);
   assert(vma != NULL);
-
   insert_vma_struct(mm, vma);
 
-  // setup the temp Page Table vaddr 0~4MB
-  // printf("setup Page Table for vaddr 0X1000, so alloc a page\n");
-  pte_t *temp_ptep = NULL;
-  temp_ptep = get_pte(mm->pgdir, BEING_CHECK_VALID_VADDR, 1);
-  assert(temp_ptep != NULL);
-  // printf("setup Page Table vaddr 0~4MB OVER!\n");
-
+  //建立指定数量物理页的内存环境
   for (i = 0; i < CHECK_VALID_PHY_PAGE_NUM; i++) {
     check_rp[i] = alloc_page();
     assert(check_rp[i] != NULL);
@@ -198,8 +165,6 @@ static void check_swap(void) {
   list_init(&free_list);
   assert(list_empty(&free_list));
 
-  // assert(alloc_page() == NULL);
-
   unsigned int nr_free_store = nr_free;
   nr_free = 0;
   for (i = 0; i < CHECK_VALID_PHY_PAGE_NUM; i++) {
@@ -207,52 +172,36 @@ static void check_swap(void) {
   }
   assert(nr_free == CHECK_VALID_PHY_PAGE_NUM);
 
+  //建立初始的虚拟页到物理页的映射关系，为页替换做准备
   printf("set up init env for check_swap begin!\n");
-  // setup initial vir_page<->phy_page environment for page relpacement
-  // algorithm
-
   pgfault_num = 0;
-
   check_content_set();
   assert(nr_free == 0);
-  for (i = 0; i < MAX_SEQ_NO; i++) swap_out_seq_no[i] = swap_in_seq_no[i] = -1;
-
   for (i = 0; i < CHECK_VALID_PHY_PAGE_NUM; i++) {
     check_ptep[i] = 0;
     check_ptep[i] = get_pte(pgdir, (i + 1) * 0x1000, 0);
-    // printf("i %d, check_ptep addr %x, value %x\n", i, check_ptep[i],
-    // *check_ptep[i]);
     assert(check_ptep[i] != NULL);
     assert(pte2page(*check_ptep[i]) == check_rp[i]);
     assert((*check_ptep[i] & PTE_V));
   }
   printf("set up init env for check_swap over!\n");
-  // now access the virt pages to test  page relpacement algorithm
+
+
+  //页替换检测
   ret = check_content_access();
   assert(ret == 0);
 
-  // restore kernel mem env
+  //恢复内存环境
   for (i = 0; i < CHECK_VALID_PHY_PAGE_NUM; i++) {
     free_pages(check_rp[i], 1);
   }
-
-  // free_page(pte2page(*temp_ptep));
   free_page(pde2page(pgdir[0]));
   pgdir[0] = 0;
   mm->pgdir = NULL;
   mm_destroy(mm);
   check_mm_struct = NULL;
-
   nr_free = nr_free_store;
   free_list = free_list_store;
-
-  le = &free_list;
-  while ((le = list_next(le)) != &free_list) {
-    struct Page *p = le2page(le, page_link);
-    count--, total -= p->property;
-  }
-  // printf("count is %d, total is %d\n", count, total);
-  // assert(count == 0);
 
   printf("check_swap() succeeded!\n");
 }

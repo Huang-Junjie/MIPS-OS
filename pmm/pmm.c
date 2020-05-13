@@ -102,18 +102,6 @@ pte_t *get_pte(pde_t *pgdir, uintptr_t va, bool create) {
   return &((pte_t *)KADDR(PDE_ADDR(*pdep)))[PTX(va)];
 }
 
-// get_page - get revated Page struct for linear address va using PDT pgdir
-struct Page *get_page(pde_t *pgdir, uintptr_t va, pte_t **ptep_store) {
-  pte_t *ptep = get_pte(pgdir, va, 0);
-  if (ptep_store != NULL) {
-    *ptep_store = ptep;
-  }
-  if (ptep != NULL && *ptep & PTE_V) {
-    return pte2page(*ptep);
-  }
-  return NULL;
-}
-
 static inline void page_remove_pte(pde_t *pgdir, uintptr_t va, pte_t *ptep) {
   if (*ptep & PTE_V) {
     struct Page *page = pte2page(*ptep);
@@ -211,24 +199,20 @@ int copy_range(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end,
                bool share) {
   assert(start % PGSIZE == 0 && end % PGSIZE == 0);
 
-  // copy content by page unit.
+
   do {
-    // call get_pte to find process A's pte according to the addr start
     pte_t *ptep = get_pte(from, start, 0), *nptep;
     if (ptep == NULL) {
       start = ROUNDDOWN(start + PDSIZE, PDSIZE);
       continue;
     }
-    // call get_pte to find process B's pte according to the addr start. If pte
-    // is NULL, just alloc a PT
+
     if (*ptep & PTE_V) {
       if ((nptep = get_pte(to, start, 1)) == NULL) {
         return -E_NO_MEM;
       }
       uint32_t perm = (*ptep & (PTE_V | PTE_D));
-      // get page from ptep
       struct Page *page = pte2page(*ptep);
-      // alloc a page for process B
       struct Page *npage = alloc_page();
       assert(page != NULL);
       assert(npage != NULL);
@@ -254,7 +238,6 @@ static void check_alloc_page(void) {
 
 static void check_pgdir(void) {
   assert(boot_pgdir != NULL && (uint32_t)PGOFF(boot_pgdir) == 0);
-  assert(get_page(boot_pgdir, 0x0, NULL) == NULL);
 
   struct Page *p1, *p2;
   p1 = alloc_page();
@@ -324,7 +307,7 @@ static void check_boot_pgdir(void) {
   printf("check_boot_pgdir() succeeded!\n");
 }
 
-// perm2str - use string 'u,r,w,-' to present the permission
+// 使用 rwg表示读、写、全局标志
 static const char *perm2str(int perm) {
   static char str[4];
   str[0] = 'r';
@@ -334,19 +317,7 @@ static const char *perm2str(int perm) {
   return str;
 }
 
-// get_pgtable_items - In [left, right] range of PDT or PT, find a continuous
-// linear addr space
-//                  - (left_store*X_SIZE~right_store*X_SIZE) for PDT or PT
-//                  - X_SIZE=PDSIZE=4M, if PDT; X_SIZE=PGSIZE=4K, if PT
-// paramemters:
-//  left:        no use ???
-//  right:       the high side of table's range
-//  start:       the low side of table's range
-//  table:       the beginning addr of table
-//  left_store:  the pointer of the high side of table's next range
-//  right_store: the pointer of the low side of table's next range
-// return value: 0 - not a invalid item range, perm - a valid item range with
-// perm permission
+// 在页目录或页表的[left, right]范围内寻找连续的虚拟地址空间
 static int get_pgtable_items(size_t left, size_t right, size_t start,
                              uintptr_t *table, size_t *left_store,
                              size_t *right_store) {
@@ -388,16 +359,4 @@ void print_pgdir(void) {
     }
   }
   printf("--------------------- END ---------------------\n");
-}
-
-void pageout(uintptr_t va, uintptr_t context) {
-  struct Page *p = NULL;
-
-  assert(context >= 0x80000000);
-
-  if (p = alloc_page()) {
-    p->ref++;
-    page_insert((pde_t *)context, p, va, PTE_D);
-    printf("pageout:\t@@@___0x%x___@@@  ins a page \n", va);
-  }
 }

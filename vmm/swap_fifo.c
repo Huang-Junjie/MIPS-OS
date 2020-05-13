@@ -10,14 +10,14 @@
 list_entry_t pra_list_head;
 
 
-static int _fifo_init_mm(struct mm_struct *mm) {
+static int fifo_init_mm(struct mm_struct *mm) {
   list_init(&pra_list_head);
   mm->sm_priv = &pra_list_head;
   return 0;
 }
 
 
-static int _fifo_map_swappable(struct mm_struct *mm, uintptr_t addr,
+static int fifo_map_swappable(struct mm_struct *mm, uintptr_t addr,
                                struct Page *page, int swap_in) {
   list_entry_t *head = (list_entry_t *)mm->sm_priv;
   list_entry_t *entry = &(page->pra_page_link);
@@ -28,7 +28,7 @@ static int _fifo_map_swappable(struct mm_struct *mm, uintptr_t addr,
 }
 
 
-static int _fifo_swap_out_victim(struct mm_struct *mm, struct Page **ptr_page,
+static int fifo_swap_out_victim(struct mm_struct *mm, struct Page **ptr_page,
                                  int in_tick) {
   list_entry_t *head = (list_entry_t *)mm->sm_priv;
   assert(head != NULL);
@@ -42,7 +42,7 @@ static int _fifo_swap_out_victim(struct mm_struct *mm, struct Page **ptr_page,
   return 0;
 }
 
-static int _fifo_check_swap(void) {
+static int fifo_check_swap(void) {
   printf("write Virt Page c in fifo_check_swap\n");
   *(unsigned char *)0x3000 = 0x0c;
   assert(pgfault_num == 4);
@@ -83,21 +83,21 @@ static int _fifo_check_swap(void) {
   return 0;
 }
 
-static int _fifo_init(void) { return 0; }
+static int fifo_init(void) { return 0; }
 
-static int _fifo_set_unswappable(struct mm_struct *mm, uintptr_t addr) {
+static int fifo_set_unswappable(struct mm_struct *mm, uintptr_t addr) {
   return 0;
 }
 
-static int _fifo_tick_event(struct mm_struct *mm) { return 0; }
+static int fifo_tick_event(struct mm_struct *mm) { return 0; }
 
 struct swap_manager fifo_swap_manager = {
     .name = "fifo swap manager",
-    .init = &_fifo_init,
-    .init_mm = &_fifo_init_mm,
-    .tick_event = &_fifo_tick_event,
-    .map_swappable = &_fifo_map_swappable,
-    .set_unswappable = &_fifo_set_unswappable,
-    .swap_out_victim = &_fifo_swap_out_victim,
-    .check_swap = &_fifo_check_swap,
+    .init = fifo_init,
+    .init_mm = fifo_init_mm,
+    .tick_event = fifo_tick_event,
+    .map_swappable = fifo_map_swappable,
+    .set_unswappable = fifo_set_unswappable,
+    .swap_out_victim = fifo_swap_out_victim,
+    .check_swap = fifo_check_swap,
 };

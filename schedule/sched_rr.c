@@ -42,7 +42,7 @@ static void RR_proc_tick(struct run_queue *rq, struct proc_struct *proc) {
   }
 }
 
-struct sched_class default_sched_class = {
+struct sched_class RR_sched = {
     .name = "RR_scheduler",
     .init = RR_init,
     .enqueue = RR_enqueue,

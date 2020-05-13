@@ -3,7 +3,7 @@
 
 #include <sched.h>
 
-extern struct sched_class default_sched_class;
+extern struct sched_class RR_sched;
 
 #endif /* _SCHED_RR_H_ */
 
