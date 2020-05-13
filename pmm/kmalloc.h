@@ -8,5 +8,5 @@ void *kmalloc(size_t n);
 void kfree(void *objp);
 
 
-#endif /* !_KMALLOC_H_ */
+#endif /* _KMALLOC_H_ */
 
