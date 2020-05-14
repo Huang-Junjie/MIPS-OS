@@ -15,7 +15,6 @@ int main() {
     assert(ecode == i);
   }
 
-  assert(wait() != 0);
 
   printf("I am parent\n");
   return 0;
